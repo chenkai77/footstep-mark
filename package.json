@@ -13,6 +13,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "icon": "./resources/logo.jpg",
   "repository": {
     "url": "https://github.com/chenkai77/footstep-mark"
   },
