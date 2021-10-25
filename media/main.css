@@ -1,0 +1,64 @@
+body {
+  /* background: #fff; */
+}
+
+div,
+pre,
+p {
+  margin: 0;
+}
+
+.mark-list {
+}
+
+.mark-list .mark-item {
+  cursor: pointer;
+  list-style: none;
+  background: #eee;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.mark-list .mark-item .serial-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  border-right: 1px solid #ddd;
+  flex-shrink: 0;
+  color: #333;
+}
+
+.mark-item .file-mark-text {
+  flex: 1;
+  overflow: hidden;
+  font-size: 12px;
+  position: relative;
+}
+
+.file-mark-text .file-mark-text-pre {
+  padding: 8px 16px;
+  color: #333;
+}
+
+.file-mark-text .mark-record {
+  border-top: 1px solid #ddd;
+  height: 20px;
+  width: 100%;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  padding-left: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #333;
+}
+
+.file-mark-text .delete-button {
+  position: absolute;
+  color: crimson;
+  right: 8px;
+  top: 4px;
+  text-decoration: underline;
+}
