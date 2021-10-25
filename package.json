@@ -13,6 +13,9 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "repository": {
+    "url": "https://github.com/chenkai77/footstep-mark"
+  },
   "main": "./dist/extension.js",
   "contributes": {
     "keybindings": [
