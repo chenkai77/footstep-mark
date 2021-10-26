@@ -1,9 +1,7 @@
-# Change Log
+## 1.0.0
 
-All notable changes to the "footstep_mark" extension will be documented in this file.
+- footstep-mark 第一版正式版，增加使用说明
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## 0.0.1
 
-## [Unreleased]
-
-- Initial release
+- footstep-mark 第一版，欢迎大家体验
