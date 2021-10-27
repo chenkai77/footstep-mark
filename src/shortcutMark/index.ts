@@ -3,10 +3,17 @@
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-25 14:04:36
+ * @LastEditTime: 2021-10-27 15:50:45
  * @Description: 快捷键标记操作
  */
-import { commands, window, Range, Position, OverviewRulerLane } from "vscode";
+import {
+  commands,
+  window,
+  Range,
+  Position,
+  OverviewRulerLane,
+  Disposable,
+} from "vscode";
 import { shortcutMarkEnum } from "../enums";
 import { commandIsRegister } from "../utils/index";
 import { state, mutations } from "../store";
@@ -18,6 +25,10 @@ export class FmShortcut {
     this.registerMarkRecord();
     this.registerRemoveMark();
   }
+
+  public LocationMarkDisposable: Disposable | undefined;
+  public MarkRecordDisposable: Disposable | undefined;
+  public RemoveMarkDisposable: Disposable | undefined;
 
   // 快捷标记command
   private static readonly LocationMark = shortcutMarkEnum.locationMark;
@@ -34,15 +45,25 @@ export class FmShortcut {
     FmShortcut.currentFmShortcut = new FmShortcut();
   }
 
+  // 销毁
+  public static disposeShortcutMark() {
+    FmShortcut.currentFmShortcut?.LocationMarkDisposable?.dispose();
+    FmShortcut.currentFmShortcut?.MarkRecordDisposable?.dispose();
+    FmShortcut.currentFmShortcut?.RemoveMarkDisposable?.dispose();
+  }
+
   async registerLocationMark() {
     let isRegister = await commandIsRegister(FmShortcut.LocationMark);
     // 如果已经注册了command Key则不再进行注册
     if (isRegister) {
       return;
     }
-    commands.registerCommand(FmShortcut.LocationMark, () => {
-      this.locationMark();
-    });
+    this.LocationMarkDisposable = commands.registerCommand(
+      FmShortcut.LocationMark,
+      () => {
+        this.locationMark();
+      }
+    );
   }
 
   async registerMarkRecord() {
@@ -51,9 +72,12 @@ export class FmShortcut {
     if (isRegister) {
       return;
     }
-    commands.registerCommand(FmShortcut.MarkRecord, async () => {
-      this.markRecord();
-    });
+    this.MarkRecordDisposable = commands.registerCommand(
+      FmShortcut.MarkRecord,
+      async () => {
+        this.markRecord();
+      }
+    );
   }
 
   async registerRemoveMark() {
@@ -62,9 +86,12 @@ export class FmShortcut {
     if (isRegister) {
       return;
     }
-    commands.registerCommand(FmShortcut.RemoveMark, async () => {
-      this.removeMark();
-    });
+    this.RemoveMarkDisposable = commands.registerCommand(
+      FmShortcut.RemoveMark,
+      async () => {
+        this.removeMark();
+      }
+    );
   }
 
   /**
@@ -73,15 +100,15 @@ export class FmShortcut {
    * @param { number } startLine: range开始行
    * @param { number } endLine: range结束行
    * @param { string } fileName： 当前文件名
-   */  
-  private calculateRange(startLine:number, endLine:number, fileName:string){
+   */
+  private calculateRange(startLine: number, endLine: number, fileName: string) {
     let markData = state.markData[fileName];
-    if(markData){
-      let target = markData.some(e=>{
+    if (markData) {
+      let target = markData.some((e) => {
         return e.range[0] <= startLine && e.range[1] >= endLine;
       });
       return target;
-    }else{
+    } else {
       return false;
     }
   }
@@ -98,7 +125,7 @@ export class FmShortcut {
       let endLine = activeEditor?.selection.end.line;
       let fileName = activeEditor?.document.fileName;
       if (startLine && endLine && fileName) {
-        if(this.calculateRange(startLine, endLine, fileName)){
+        if (this.calculateRange(startLine, endLine, fileName)) {
           return;
         }
         // 获取最后的文本宽度
@@ -157,14 +184,12 @@ export class FmShortcut {
       if (startLine && endLine && fileName) {
         let activeMarkData = state.markData[fileName];
         if (activeMarkData) {
-          let target = activeMarkData.find(
-            (e,i) =>{ 
-            if(e.range[0] === startLine && e.range[1] === endLine){
+          let target = activeMarkData.find((e, i) => {
+            if (e.range[0] === startLine && e.range[1] === endLine) {
               index = i;
               return true;
             }
-          }
-          );
+          });
           if (target) {
             target.textEditorDecorationType?.dispose();
             mutations.deleteMarkData(fileName, index);

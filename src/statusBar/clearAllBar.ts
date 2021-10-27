@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-12 14:55:40
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-25 10:01:20
+ * @LastEditTime: 2021-10-27 15:39:54
  * @Description: 状态栏扩展
  */
 import {
@@ -56,5 +56,13 @@ export class ClearAllBar {
 	public static initFMstatusBar() {
     let statusBar = window.createStatusBarItem(StatusBarAlignment.Left);
     ClearAllBar.currentInstance = new ClearAllBar(statusBar);
+  }
+
+  /**
+   * @description: 销毁状态栏
+   * @author: depp.chen
+   */  
+  public static disposeFMstatusBar() {
+    ClearAllBar.currentInstance?.FMstatusBar?.dispose(); 
   }
 }

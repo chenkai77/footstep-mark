@@ -19,6 +19,10 @@ export async function activate(context: ExtensionContext) {
   FmWindowListen.initFmWindowListen();
 }
 // 当扩展程序停用，调用此方法
-export function deactivate() {}
+export function deactivate() {
+  WebviewStatusBar.disposeFMstatusBar();
+  ClearAllBar.disposeFMstatusBar();
+  FmShortcut.disposeShortcutMark();
+}
 
 
