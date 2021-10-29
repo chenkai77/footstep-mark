@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-27 15:50:45
+ * @LastEditTime: 2021-10-29 17:54:47
  * @Description: 快捷键标记操作
  */
 import {
@@ -150,6 +150,7 @@ export class FmShortcut {
             range: [startLine, endLine, endPosition],
             fileMarkText,
             textEditorDecorationType,
+            viewColumn: activeEditor?.viewColumn
           });
           // 和webview脚本信息交流
           FmWebViewPanel.currentPanel?.sendMessage({
@@ -158,6 +159,7 @@ export class FmShortcut {
             data: {
               range: [startLine, endLine, endPosition],
               fileMarkText,
+              viewColumn: activeEditor?.viewColumn,
               textEditorDecorationTypeKey: textEditorDecorationType.key,
             },
           });

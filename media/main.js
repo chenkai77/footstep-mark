@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-26 10:57:49
+ * @LastEditTime: 2021-10-29 17:58:17
  * @Description: 扩展窗口js
  */
 (function () {
@@ -12,11 +12,30 @@
 
   let activeFileName = "";
   let allMarkData = [];
+  let extensionPath = '';
   let liDataIndex = "data-order";
   let liMarkDataRange = "markData-range";
   let decorationTypeKey = "decoration-type";
+  let attributeFileName = "file-name";
   let REGX_HTML_ENCODE = /“|&|’|<|>|[\x00-\x20]|[\x7F-\xFF]|[\u0100-\u2700]/g;
 
+  /**
+   * @description: 根据当前打开目录解析对应文件名
+   * @author: depp.chen
+   * @param { string } fileName : 文件名
+   */
+  function calculateFileName (fileName) {
+    if (extensionPath) {
+      fileName = fileName.substr(extensionPath.length);
+    }
+    return fileName;
+  };
+
+  /**
+   * @description: 转义html
+   * @author: depp.chen
+   * @param { string } s ： html文本
+   */  
   function encodeHtml(s) {
     return typeof s !== "string"
       ? s
@@ -31,7 +50,7 @@
   }
 
   markList.addEventListener("click", (e) => {
-    let target = e.path.find((ele) => ele.nodeName.toLowerCase() === "li");
+    let target = e.path.find((ele) => ele.className === "mark-item");
     if (target) {
       if (e.target.className === "delete-button") {
         // 删除
@@ -48,24 +67,44 @@
           fileName: activeFileName,
         });
       }
+    } else {
+      if (e.target.className === "file-name") {
+        let fileName = e.target.getAttribute(attributeFileName);
+        vscode.postMessage({
+          type: 'openOrShowFile',
+          fileName,
+        });
+      }
     }
   });
+  
+  // 创建集合元素
+  function createMarkWrapper(fileName) {
+    let wrapper = document.createElement("div");
+    let shortFileName = calculateFileName(fileName);
+    let fileNameTitle = document.createElement("h3");
+    fileNameTitle.innerText = shortFileName;
+    fileNameTitle.className = 'file-name';
+    fileNameTitle.setAttribute(attributeFileName, fileName);
+    wrapper.appendChild(fileNameTitle);
+    return wrapper;
+  }
 
   // 创建单项元素
-  function createMarkLi(data, i) {
-    let li = document.createElement("li");
+  function createMarkItem(data, i) {
+    let item = document.createElement("div");
     let rangeStr = data.range.join(",");
-    li.setAttribute(liMarkDataRange, rangeStr);
-    li.setAttribute(decorationTypeKey, data.textEditorDecorationTypeKey);
-    li.setAttribute(liDataIndex, data.range[0]);
-    li.className = "mark-item";
-    li.innerHTML = `<span class='serial-number'>${i}</span>
+    item.setAttribute(liMarkDataRange, rangeStr);
+    item.setAttribute(decorationTypeKey, data.textEditorDecorationTypeKey);
+    item.setAttribute(liDataIndex, data.range[0]);
+    item.className = "mark-item";
+    item.innerHTML = `<span class='serial-number'>${i}</span>
     <div class='file-mark-text'>
       <div class='delete-button'>删除</div>
       <pre class='file-mark-text-pre'>${encodeHtml(data.fileMarkText)}</pre>
       <p class='mark-record'>${data.record ? data.record : ""}</p> 
     </div>`;
-    return li;
+    return item;
   }
 
   const messageEventType = {
@@ -82,12 +121,18 @@
     changeAllMark: (data) => {
       if (data) {
         markList.innerHTML = "";
-        allMarkData = [...data];
+        if (data.extensionPath) {
+          extensionPath = data.extensionPath;
+        }
         let fragment = document.createDocumentFragment();
-        data.forEach((e, i) => {
-          const li = createMarkLi(e, i + 1);
-          fragment.appendChild(li);
-        });
+        for (let fileName in data) {
+          let listWrapper =  createMarkWrapper(fileName);       
+          data[fileName].forEach((e, i) => {
+            let markItem = createMarkItem(e, i + 1);
+            listWrapper.appendChild(markItem);
+          });
+          fragment.appendChild(listWrapper);
+        }
         markList.appendChild(fragment);
       }
     },
@@ -121,10 +166,10 @@
         }
       });
       if (target) {
-        const li = createMarkLi(data, index);
+        const li = createMarkItem(data, index);
         markList.insertBefore(li, target);
       } else {
-        const li = createMarkLi(data, allMarkItem.length + 1);
+        const li = createMarkItem(data, allMarkItem.length + 1);
         markList.appendChild(li);
       }
     },

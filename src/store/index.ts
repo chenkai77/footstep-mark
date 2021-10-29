@@ -1,10 +1,10 @@
 import { ExtensionContext, TextEditorDecorationType, window } from 'vscode';
-
-interface IMarkDetails {
+export interface IMarkDetails {
   range: [number, number, number],
   record?: string | undefined,
   fileMarkText?: string | undefined,
-  textEditorDecorationType: TextEditorDecorationType
+  textEditorDecorationType: TextEditorDecorationType,
+  viewColumn?: number, // 编辑器所处的序号
 }
 
 interface State {
@@ -30,12 +30,14 @@ const getter = {
 
 const mutations = {
   // 增加标记数据
-  addMarkData(fileName: string | undefined, markData: IMarkDetails){
+  addMarkData(fileName: string | undefined, markData: IMarkDetails) {
     if(!fileName){
       return;
     }
-    if(state.markData[fileName]){
-      state.markData[fileName].push(markData);
+    if (state.markData[fileName]) {
+      state.markData[fileName].push({
+        ...markData,
+      });
       state.markData[fileName].sort((a,b)=>a.range[0] - b.range[0]);
     }else{
       state.markData[fileName] = [markData];

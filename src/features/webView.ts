@@ -2,13 +2,14 @@
  * @Author: depp.chen
  * @Date: 2021-10-21 11:23:55
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-25 11:18:12
+ * @LastEditTime: 2021-10-29 17:57:19
  * @Description: 扩展编辑器
  */
 import { window, StatusBarItem, StatusBarAlignment, Uri, commands, workspace, OverviewRulerLane, Range, Position, Location, TextEditorRevealType, ViewColumn, WebviewPanel, Disposable, ExtensionContext, Webview } from 'vscode';
-import { extensionWebViewEnum, webViewScriptEnum } from '../enums';
+import { extensionWebViewEnum, webViewScriptEnum, plugInOperationEnum } from '../enums';
 import { state, getter, mutations } from '../store';
 import { WebviewStatusBar } from '../statusBar/webviewBar';
+import { createNewUri } from '../utils';
 
 // 随机码生成器
 function getNonce() {
@@ -57,7 +58,8 @@ export class FmWebViewPanel {
       FmWebViewPanel.currentPanel.dispose();
       return;
     }
-    const webView = window.createWebviewPanel(FmWebViewPanel.extensionWebViewType, '操作栏', {preserveFocus: false, viewColumn:ViewColumn.Beside});
+    let visibleTextEditors = window.visibleTextEditors;
+    const webView = window.createWebviewPanel(FmWebViewPanel.extensionWebViewType, '操作栏', {preserveFocus: false, viewColumn:visibleTextEditors.length + 1});
     FmWebViewPanel.currentPanel = new FmWebViewPanel(webView);
     FmWebViewPanel.currentPanel.changeListData();
   }
@@ -83,36 +85,58 @@ export class FmWebViewPanel {
    * @description: 接受webview Script的信息
    * @author: depp.chen
    */  
-  public registerReceiveMessage(){
-    this.FMwebView.webview.onDidReceiveMessage((message)=>{
-      console.log(message);
-			let visibleTextEditors = window.visibleTextEditors;
-      let targetFile = visibleTextEditors.find(e=>{
-        return e.document.fileName === message.fileName;
-      });
-      if(!targetFile){
-        return;
-      }
-      if(message.decorationTypeKey){
-        let activeMarkData = state.markData[message.fileName];
-        if(activeMarkData){
-          let index = -1;
-          let target = activeMarkData.find((e, i)=>{
-            if(e.textEditorDecorationType?.key===message.decorationTypeKey){
-              index = i;
-              return true;
-            }
+  public async registerReceiveMessage(){
+    this.FMwebView.webview.onDidReceiveMessage( async (message)=>{
+      console.log(message, workspace.textDocuments, workspace.workspaceFolders);
+      if (message.type === plugInOperationEnum.openOrShowFile) {
+        // let uri = createNewUri([message.shortFileName]);
+        // let uri = Uri.file(message.fileName);
+        // window.showTextDocument(uri);
+        let visibleTextEditors = window.visibleTextEditors;
+        let textDocuments = workspace.textDocuments;
+        console.log(workspace, visibleTextEditors);
+        let targetFile = textDocuments.find(e=>{
+          return e.fileName === message.fileName;
+        });
+        console.log(targetFile);
+        // workspace.openTextDocument(message.fileName);
+        if (targetFile) {   
+          // let doc = await workspace.openTextDocument(targetFile.uri);
+          // let editor = await window.showTextDocument(doc, );
+          // console.log(doc, editor);
+          window.showTextDocument(targetFile.uri, {
+            // viewColumn: 1,
           });
-          if(target && index > -1){
-            target.textEditorDecorationType?.dispose();
-            mutations.deleteMarkData(message.fileName, index);
-          }
         }
-      }else if(message.range){
-				let messageRange = message.range.split(',');
-        let rangeArr = messageRange.map((e:string)=>Number(e));
-				targetFile.revealRange(new Range(new Position(rangeArr[0], 0), new Position(rangeArr[1], rangeArr[2])), TextEditorRevealType.InCenter);
-			}
+      } else if (message.fileName && !message.type) {
+        let visibleTextEditors = window.visibleTextEditors;
+        let targetFile = visibleTextEditors.find(e=>{
+          return e.document.fileName === message.fileName;
+        });
+        if(!targetFile){
+          return;
+        }
+        if(message.decorationTypeKey){
+          let activeMarkData = state.markData[message.fileName];
+          if(activeMarkData){
+            let index = -1;
+            let target = activeMarkData.find((e, i)=>{
+              if(e.textEditorDecorationType?.key===message.decorationTypeKey){
+                index = i;
+                return true;
+              }
+            });
+            if(target && index > -1){
+              target.textEditorDecorationType?.dispose();
+              mutations.deleteMarkData(message.fileName, index);
+            }
+          }
+        }else if(message.range){
+          let messageRange = message.range.split(',');
+          let rangeArr = messageRange.map((e:string)=>Number(e));
+          targetFile.revealRange(new Range(new Position(rangeArr[0], 0), new Position(rangeArr[1], rangeArr[2])), TextEditorRevealType.InCenter);
+        }
+      }
 		});
   }
 
@@ -136,16 +160,20 @@ export class FmWebViewPanel {
     if(activeTextEditor){
       let fileName = activeTextEditor.document.fileName;
       let markData = state.markData[fileName] || [];
-      let data = markData.map(e=>{
-        return {
-          ...e,
-          textEditorDecorationType: undefined,
-          textEditorDecorationTypeKey: e.textEditorDecorationType?.key,
-        };
-      });
+      // let data = markData.map(e=>{
+      //   return {
+      //     ...e,
+      //     textEditorDecorationType: undefined,
+      //     textEditorDecorationTypeKey: e.textEditorDecorationType?.key,
+      //   };
+      // });
+
+      let data = {
+        ...state.markData,
+        extensionPath: state.context?.extensionPath || '',
+      };
       FmWebViewPanel.currentPanel?.sendMessage({
         type: webViewScriptEnum.changeAllMark,
-        fileName,
         data,
       });
     }
