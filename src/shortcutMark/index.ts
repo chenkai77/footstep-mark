@@ -2,8 +2,8 @@
  * @autoAdd: false
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
- * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-29 17:54:47
+ * @LastEditors: kai
+ * @LastEditTime: 2021-10-30 01:03:12
  * @Description: 快捷键标记操作
  */
 import {
@@ -102,7 +102,7 @@ export class FmShortcut {
    * @param { string } fileName： 当前文件名
    */
   private calculateRange(startLine: number, endLine: number, fileName: string) {
-    let markData = state.markData[fileName];
+    let markData = state.markData[fileName]?.markDetails;
     if (markData) {
       let target = markData.some((e) => {
         return e.range[0] <= startLine && e.range[1] >= endLine;
@@ -150,8 +150,7 @@ export class FmShortcut {
             range: [startLine, endLine, endPosition],
             fileMarkText,
             textEditorDecorationType,
-            viewColumn: activeEditor?.viewColumn
-          });
+          }, activeEditor?.viewColumn);
           // 和webview脚本信息交流
           FmWebViewPanel.currentPanel?.sendMessage({
             type: webViewScriptEnum.addMarkItem,
@@ -183,8 +182,8 @@ export class FmShortcut {
       let endLine = activeEditor?.selection.end.line;
       let fileName = activeEditor?.document.fileName;
       let index = -1;
-      if (startLine && endLine && fileName) {
-        let activeMarkData = state.markData[fileName];
+      if (startLine && endLine && fileName&& state.markData[fileName] ) {
+        let activeMarkData = state.markData[fileName].markDetails;
         if (activeMarkData) {
           let target = activeMarkData.find((e, i) => {
             if (e.range[0] === startLine && e.range[1] === endLine) {
@@ -221,7 +220,7 @@ export class FmShortcut {
       let endLine = activeEditor?.selection.end.line;
       let fileName = activeEditor?.document.fileName;
       if (startLine && endLine && fileName) {
-        let markData = state.markData[fileName];
+        let markData = state.markData[fileName].markDetails;
         if (markData) {
           let target = markData.find((e) => {
             let start = e.range[0];

@@ -2,8 +2,8 @@
  * @autoAdd: false
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
- * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-29 17:58:17
+ * @LastEditors: kai
+ * @LastEditTime: 2021-10-30 01:15:33
  * @Description: 扩展窗口js
  */
 (function () {
@@ -12,11 +12,12 @@
 
   let activeFileName = "";
   let allMarkData = [];
-  let extensionPath = '';
+  let extensionPath = "";
   let liDataIndex = "data-order";
   let liMarkDataRange = "markData-range";
   let decorationTypeKey = "decoration-type";
   let attributeFileName = "file-name";
+  let attributeViewColumn = "view-column";
   let REGX_HTML_ENCODE = /“|&|’|<|>|[\x00-\x20]|[\x7F-\xFF]|[\u0100-\u2700]/g;
 
   /**
@@ -24,18 +25,18 @@
    * @author: depp.chen
    * @param { string } fileName : 文件名
    */
-  function calculateFileName (fileName) {
+  function calculateFileName(fileName) {
     if (extensionPath) {
       fileName = fileName.substr(extensionPath.length);
     }
     return fileName;
-  };
+  }
 
   /**
    * @description: 转义html
    * @author: depp.chen
    * @param { string } s ： html文本
-   */  
+   */
   function encodeHtml(s) {
     return typeof s !== "string"
       ? s
@@ -70,22 +71,25 @@
     } else {
       if (e.target.className === "file-name") {
         let fileName = e.target.getAttribute(attributeFileName);
+        let viewColumn = e.target.getAttribute(attributeViewColumn);
         vscode.postMessage({
-          type: 'openOrShowFile',
+          type: "openOrShowFile",
           fileName,
+          viewColumn,
         });
       }
     }
   });
-  
+
   // 创建集合元素
-  function createMarkWrapper(fileName) {
+  function createMarkWrapper(fileName, viewColumn) {
     let wrapper = document.createElement("div");
     let shortFileName = calculateFileName(fileName);
     let fileNameTitle = document.createElement("h3");
     fileNameTitle.innerText = shortFileName;
-    fileNameTitle.className = 'file-name';
+    fileNameTitle.className = "file-name";
     fileNameTitle.setAttribute(attributeFileName, fileName);
+    fileNameTitle.setAttribute(attributeViewColumn, viewColumn);
     wrapper.appendChild(fileNameTitle);
     return wrapper;
   }
@@ -126,8 +130,14 @@
         }
         let fragment = document.createDocumentFragment();
         for (let fileName in data) {
-          let listWrapper =  createMarkWrapper(fileName);       
-          data[fileName].forEach((e, i) => {
+          if (fileName === "extensionPath") {
+            continue;
+          }
+          let listWrapper = createMarkWrapper(
+            fileName,
+            data[fileName].viewColumn
+          );
+          data[fileName].markDetails.forEach((e, i) => {
             let markItem = createMarkItem(e, i + 1);
             listWrapper.appendChild(markItem);
           });

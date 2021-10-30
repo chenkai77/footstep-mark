@@ -1,8 +1,8 @@
 /*
  * @Author: depp.chen
  * @Date: 2021-10-21 11:23:55
- * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-29 17:57:19
+ * @LastEditors: kai
+ * @LastEditTime: 2021-10-30 01:18:31
  * @Description: 扩展编辑器
  */
 import { window, StatusBarItem, StatusBarAlignment, Uri, commands, workspace, OverviewRulerLane, Range, Position, Location, TextEditorRevealType, ViewColumn, WebviewPanel, Disposable, ExtensionContext, Webview } from 'vscode';
@@ -82,30 +82,26 @@ export class FmWebViewPanel {
   }
 
   /**
-   * @description: 接受webview Script的信息
+   * @description: 接收webview Script的信息
    * @author: depp.chen
    */  
   public async registerReceiveMessage(){
     this.FMwebView.webview.onDidReceiveMessage( async (message)=>{
-      console.log(message, workspace.textDocuments, workspace.workspaceFolders);
       if (message.type === plugInOperationEnum.openOrShowFile) {
-        // let uri = createNewUri([message.shortFileName]);
-        // let uri = Uri.file(message.fileName);
-        // window.showTextDocument(uri);
         let visibleTextEditors = window.visibleTextEditors;
-        let textDocuments = workspace.textDocuments;
-        console.log(workspace, visibleTextEditors);
-        let targetFile = textDocuments.find(e=>{
-          return e.fileName === message.fileName;
+        console.log(message, visibleTextEditors);
+        let targetFile = visibleTextEditors.find(e=>{
+          return e.document.fileName === message.fileName;
         });
-        console.log(targetFile);
-        // workspace.openTextDocument(message.fileName);
+        // 如果文件在打开的编辑器中
         if (targetFile) {   
-          // let doc = await workspace.openTextDocument(targetFile.uri);
-          // let editor = await window.showTextDocument(doc, );
-          // console.log(doc, editor);
-          window.showTextDocument(targetFile.uri, {
-            // viewColumn: 1,
+          window.showTextDocument(targetFile.document.uri, {
+            viewColumn: targetFile.viewColumn,
+          });
+        }else{
+          let uri = Uri.file(message.fileName);
+          window.showTextDocument(uri, {
+            viewColumn: Number(message.viewColumn) || 1,
           });
         }
       } else if (message.fileName && !message.type) {
@@ -117,7 +113,7 @@ export class FmWebViewPanel {
           return;
         }
         if(message.decorationTypeKey){
-          let activeMarkData = state.markData[message.fileName];
+          let activeMarkData = state.markData[message.fileName].markDetails;
           if(activeMarkData){
             let index = -1;
             let target = activeMarkData.find((e, i)=>{
@@ -158,8 +154,8 @@ export class FmWebViewPanel {
   public changeListData(){
     let activeTextEditor = window.activeTextEditor;
     if(activeTextEditor){
-      let fileName = activeTextEditor.document.fileName;
-      let markData = state.markData[fileName] || [];
+      // let fileName = activeTextEditor.document.fileName;
+      // let markData = state.markData[fileName] || [];
       // let data = markData.map(e=>{
       //   return {
       //     ...e,
@@ -172,6 +168,7 @@ export class FmWebViewPanel {
         ...state.markData,
         extensionPath: state.context?.extensionPath || '',
       };
+      console.log(data);
       FmWebViewPanel.currentPanel?.sendMessage({
         type: webViewScriptEnum.changeAllMark,
         data,
