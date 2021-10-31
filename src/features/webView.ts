@@ -5,44 +5,73 @@
  * @LastEditTime: 2021-10-30 01:18:31
  * @Description: 扩展编辑器
  */
-import { window, StatusBarItem, StatusBarAlignment, Uri, commands, workspace, OverviewRulerLane, Range, Position, Location, TextEditorRevealType, ViewColumn, WebviewPanel, Disposable, ExtensionContext, Webview } from 'vscode';
-import { extensionWebViewEnum, webViewScriptEnum, plugInOperationEnum } from '../enums';
-import { state, getter, mutations } from '../store';
-import { WebviewStatusBar } from '../statusBar/webviewBar';
-import { createNewUri } from '../utils';
+import {
+  window,
+  StatusBarItem,
+  StatusBarAlignment,
+  Uri,
+  commands,
+  workspace,
+  OverviewRulerLane,
+  Range,
+  Position,
+  Location,
+  TextEditorRevealType,
+  ViewColumn,
+  WebviewPanel,
+  Disposable,
+  ExtensionContext,
+  Webview,
+} from "vscode";
+import {
+  extensionWebViewEnum,
+  webViewScriptEnum,
+  plugInOperationEnum,
+} from "../enums";
+import { state, getter, mutations } from "../store";
+import { WebviewStatusBar } from "../statusBar/webviewBar";
+import { createNewUri } from "../utils";
 
 // 随机码生成器
 function getNonce() {
-	let text = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }
 
 export class FmWebViewPanel {
-  private constructor (panel: WebviewPanel,){
+  private constructor(panel: WebviewPanel) {
     this.FMwebView = panel;
 
     this.FMwebView.webview.html = this.getHtmlForWebview();
 
     this.FMwebView.webview.options = {
       enableScripts: true,
-      localResourceRoots: [Uri.joinPath((state.context as ExtensionContext).extensionUri, 'media')]
+      localResourceRoots: [
+        Uri.joinPath((state.context as ExtensionContext).extensionUri, "media"),
+      ],
     };
 
     this.registerReceiveMessage();
 
     WebviewStatusBar.currentInstance?.changeButtonOn();
 
-    this.FMwebView.onDidDispose(()=>{
-      this.dispose();
-		}, null, this.disposables);
+    this.FMwebView.onDidDispose(
+      () => {
+        this.dispose();
+      },
+      null,
+      this.disposables
+    );
   }
   // 扩展编辑器标记枚举
-  private static readonly extensionWebViewType  = extensionWebViewEnum.extensionWebView;
-  
+  private static readonly extensionWebViewType =
+    extensionWebViewEnum.extensionWebView;
+
   // 关闭的页面
   private disposables: Disposable[] = [];
 
@@ -53,13 +82,17 @@ export class FmWebViewPanel {
   public static currentPanel: FmWebViewPanel | undefined;
 
   // 初始化
-  public static createOrDispose(){
-    if(FmWebViewPanel.currentPanel){
+  public static createOrDispose() {
+    if (FmWebViewPanel.currentPanel) {
       FmWebViewPanel.currentPanel.dispose();
       return;
     }
     let visibleTextEditors = window.visibleTextEditors;
-    const webView = window.createWebviewPanel(FmWebViewPanel.extensionWebViewType, '操作栏', {preserveFocus: false, viewColumn:visibleTextEditors.length + 1});
+    const webView = window.createWebviewPanel(
+      FmWebViewPanel.extensionWebViewType,
+      "操作栏",
+      { preserveFocus: false, viewColumn: visibleTextEditors.length + 1 }
+    );
     FmWebViewPanel.currentPanel = new FmWebViewPanel(webView);
     FmWebViewPanel.currentPanel.changeListData();
   }
@@ -67,82 +100,130 @@ export class FmWebViewPanel {
   /**
    * @description: 销毁
    * @author: depp.chen
-   */  
-  public dispose(){
+   */
+  public dispose() {
     FmWebViewPanel.currentPanel = undefined;
     this.FMwebView.dispose();
-    console.log(this.disposables.length, this.disposables, 'this.disposables');
+    console.log(this.disposables.length, this.disposables, "this.disposables");
     WebviewStatusBar.currentInstance?.changeButtonOff();
     while (this.disposables.length) {
-			const x = this.disposables.pop();
-			if (x) {
-				x.dispose();
-			}
-		}
+      const x = this.disposables.pop();
+      if (x) {
+        x.dispose();
+      }
+    }
   }
+
+  private registerMessageFunction: any = {
+    [plugInOperationEnum.openOrShowFile]: async (message: any) => {
+      let visibleTextEditors = window.visibleTextEditors;
+      let targetFile = visibleTextEditors.find((e) => {
+        return e.document.fileName === message.fileName;
+      });
+      // 如果文件在打开的编辑器中
+      if (targetFile) {
+        window.showTextDocument(targetFile.document.uri, {
+          viewColumn: targetFile.viewColumn,
+        });
+        if (targetFile.viewColumn !== Number(message.viewColumn)) {
+          mutations.changeViewColumn(
+            message.fileName,
+            targetFile.viewColumn as number
+          );
+          FmWebViewPanel.currentPanel?.sendMessage({
+            type: webViewScriptEnum.changeViewColumn,
+            data: {
+              fileName: message.fileName,
+              viewColumn: targetFile.viewColumn,
+            },
+          });
+        }
+        return targetFile;
+      } else {
+        let uri = Uri.file(message.fileName);
+        let openFile = await window.showTextDocument(uri, {
+          viewColumn: Number(message.viewColumn) || 1,
+        });
+        return openFile;
+      }
+    },
+    [plugInOperationEnum.rangeJump]: async (message: any) => {
+      let target = await this.registerMessageFunction[
+        plugInOperationEnum.openOrShowFile
+      ](message);
+      let messageRange = message.range.split(",");
+      let rangeArr = messageRange.map((e: string) => Number(e));
+      if (target) {
+        target.revealRange(
+          new Range(
+            new Position(rangeArr[0], 0),
+            new Position(rangeArr[1], rangeArr[2])
+          ),
+          TextEditorRevealType.InCenter
+        );
+      }
+    },
+    [plugInOperationEnum.deleteMarkItem]: async (message: any) => {
+      let activeMarkData = state.markData[message.fileName].markDetails;
+      if (activeMarkData) {
+        let index = -1;
+        let target = activeMarkData.find((e, i) => {
+          if (e.attributeDecorationTypeKey === message.decorationTypeKey) {
+            index = i;
+            return true;
+          }
+        });
+        if (target && index > -1) {
+          target.textEditorDecorationType?.dispose();
+          mutations.deleteMarkData(message.fileName, index);
+        }
+      }
+    },
+    [plugInOperationEnum.deleteFileAllMark]: (message:any) => {
+      mutations.deleteFileAllMarkData(message.fileName)
+    }
+  };
 
   /**
    * @description: 接收webview Script的信息
    * @author: depp.chen
-   */  
-  public async registerReceiveMessage(){
-    this.FMwebView.webview.onDidReceiveMessage( async (message)=>{
-      if (message.type === plugInOperationEnum.openOrShowFile) {
-        let visibleTextEditors = window.visibleTextEditors;
-        console.log(message, visibleTextEditors);
-        let targetFile = visibleTextEditors.find(e=>{
-          return e.document.fileName === message.fileName;
-        });
-        // 如果文件在打开的编辑器中
-        if (targetFile) {   
-          window.showTextDocument(targetFile.document.uri, {
-            viewColumn: targetFile.viewColumn,
-          });
-        }else{
-          let uri = Uri.file(message.fileName);
-          window.showTextDocument(uri, {
-            viewColumn: Number(message.viewColumn) || 1,
-          });
-        }
-      } else if (message.fileName && !message.type) {
-        let visibleTextEditors = window.visibleTextEditors;
-        let targetFile = visibleTextEditors.find(e=>{
-          return e.document.fileName === message.fileName;
-        });
-        if(!targetFile){
-          return;
-        }
-        if(message.decorationTypeKey){
-          let activeMarkData = state.markData[message.fileName].markDetails;
-          if(activeMarkData){
-            let index = -1;
-            let target = activeMarkData.find((e, i)=>{
-              if(e.textEditorDecorationType?.key===message.decorationTypeKey){
-                index = i;
-                return true;
-              }
-            });
-            if(target && index > -1){
-              target.textEditorDecorationType?.dispose();
-              mutations.deleteMarkData(message.fileName, index);
-            }
-          }
-        }else if(message.range){
-          let messageRange = message.range.split(',');
-          let rangeArr = messageRange.map((e:string)=>Number(e));
-          targetFile.revealRange(new Range(new Position(rangeArr[0], 0), new Position(rangeArr[1], rangeArr[2])), TextEditorRevealType.InCenter);
-        }
-      }
-		});
+   */
+  public async registerReceiveMessage() {
+    this.FMwebView.webview.onDidReceiveMessage(async (message) => {
+      this.registerMessageFunction[message.type](message);
+      // if (message.type === plugInOperationEnum.openOrShowFile) {
+      // } else if (message.type === plugInOperationEnum.rangeJump) {
+      // } else if (message.fileName && !message.type) {
+      //   let visibleTextEditors = window.visibleTextEditors;
+      //   let targetFile = visibleTextEditors.find((e) => {
+      //     return e.document.fileName === message.fileName;
+      //   });
+      //   if (!targetFile) {
+      //     return;
+      //   }
+      //   if (message.decorationTypeKey) {
+      //   } else if (message.range) {
+      //     let messageRange = message.range.split(",");
+      //     let rangeArr = messageRange.map((e: string) => Number(e));
+      //     targetFile.revealRange(
+      //       new Range(
+      //         new Position(rangeArr[0], 0),
+      //         new Position(rangeArr[1], rangeArr[2])
+      //       ),
+      //       TextEditorRevealType.InCenter
+      //     );
+      //   }
+      // }
+    });
   }
 
   /**
    * @description: 向webview发送信息
    * @author: depp.chen
-   * @param { any } message : 发送的信息体 
-   */  
-  public sendMessage(message:any){
-    if(this.FMwebView){
+   * @param { any } message : 发送的信息体
+   */
+  public sendMessage(message: any) {
+    if (this.FMwebView) {
       this.FMwebView.webview.postMessage(message);
     }
   }
@@ -150,10 +231,10 @@ export class FmWebViewPanel {
   /**
    * @description: 修改webview列表数据
    * @author: depp.chen
-   */  
-  public changeListData(){
+   */
+  public changeListData() {
     let activeTextEditor = window.activeTextEditor;
-    if(activeTextEditor){
+    if (activeTextEditor) {
       // let fileName = activeTextEditor.document.fileName;
       // let markData = state.markData[fileName] || [];
       // let data = markData.map(e=>{
@@ -166,7 +247,7 @@ export class FmWebViewPanel {
 
       let data = {
         ...state.markData,
-        extensionPath: state.context?.extensionPath || '',
+        extensionPath: state.context?.extensionPath || "",
       };
       console.log(data);
       FmWebViewPanel.currentPanel?.sendMessage({
@@ -176,19 +257,33 @@ export class FmWebViewPanel {
     }
   }
 
-
   /**
    * @description: 获取html
    * @author: depp.chen
-   */  
-  public getHtmlForWebview(){
+   */
+  public getHtmlForWebview() {
     let webview = this.FMwebView.webview;
 
-    const scriptPathOnDisk = Uri.joinPath((state.context as ExtensionContext).extensionUri, 'media', 'main.js');
-    const scriptUri = (scriptPathOnDisk).with({ 'scheme': 'vscode-resource' });
+    const scriptPathOnDisk = Uri.joinPath(
+      (state.context as ExtensionContext).extensionUri,
+      "media",
+      "main.js"
+    );
+    const scriptUri = scriptPathOnDisk.with({ scheme: "vscode-resource" });
 
-		const styleMainPath = Uri.joinPath((state.context as ExtensionContext).extensionUri, 'media', 'main.css');
+    const styleMainPath = Uri.joinPath(
+      (state.context as ExtensionContext).extensionUri,
+      "media",
+      "main.css"
+    );
+
+    const deleteImgPath = Uri.joinPath(
+      (state.context as ExtensionContext).extensionUri,
+      "media",
+      "delete-icon.png"
+    );
     const stylesMainUri = webview.asWebviewUri(styleMainPath);
+    const deleteImgPathUri = webview.asWebviewUri(deleteImgPath);
 
     const nonce = getNonce();
 
@@ -203,6 +298,7 @@ export class FmWebViewPanel {
       <body>
         <div class='mark-list'></div>
         <script nonce="${nonce}" src="${scriptUri}"></script>
+        <div class='img-info'>${deleteImgPathUri}</div>
       </body>
     </html>`;
   }

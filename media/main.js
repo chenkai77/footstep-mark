@@ -8,16 +8,24 @@
  */
 (function () {
   const vscode = acquireVsCodeApi();
+  // 最外层袁术
   const markList = document.querySelector(".mark-list");
+  // 属性名枚举
+  const elementAttributeName = {
+    // 标记项序号属性
+    markItemOrder: 'data-order',
+    // 标记项range范围合并属性
+    markItemRange: 'markData-range',
+    // 标记项vscode装饰key属性
+    decorationTypeKey: 'decoration-type',
+    // 文件名属性
+    attributeFileName: 'file-name',
+    // 文件对于编辑器行号属性
+    attributeViewColumn: 'view-column',
+  };
 
   let activeFileName = "";
-  let allMarkData = [];
   let extensionPath = "";
-  let liDataIndex = "data-order";
-  let liMarkDataRange = "markData-range";
-  let decorationTypeKey = "decoration-type";
-  let attributeFileName = "file-name";
-  let attributeViewColumn = "view-column";
   let REGX_HTML_ENCODE = /“|&|’|<|>|[\x00-\x20]|[\x7F-\xFF]|[\u0100-\u2700]/g;
 
   /**
@@ -50,47 +58,19 @@
         });
   }
 
-  markList.addEventListener("click", (e) => {
-    let target = e.path.find((ele) => ele.className === "mark-item");
-    if (target) {
-      if (e.target.className === "delete-button") {
-        // 删除
-        let attributeDecorationTypeKey = target.getAttribute(decorationTypeKey);
-        messageEventType["deleteMarkItem"](attributeDecorationTypeKey);
-        vscode.postMessage({
-          fileName: activeFileName,
-          decorationTypeKey: attributeDecorationTypeKey,
-        });
-      } else {
-        let range = target.getAttribute(liMarkDataRange);
-        vscode.postMessage({
-          range: range,
-          fileName: activeFileName,
-        });
-      }
-    } else {
-      if (e.target.className === "file-name") {
-        let fileName = e.target.getAttribute(attributeFileName);
-        let viewColumn = e.target.getAttribute(attributeViewColumn);
-        vscode.postMessage({
-          type: "openOrShowFile",
-          fileName,
-          viewColumn,
-        });
-      }
-    }
-  });
-
   // 创建集合元素
   function createMarkWrapper(fileName, viewColumn) {
+    let imgSrc = document.getElementsByClassName('img-info')[0].innerText
     let wrapper = document.createElement("div");
     let shortFileName = calculateFileName(fileName);
-    let fileNameTitle = document.createElement("h3");
-    fileNameTitle.innerText = shortFileName;
-    fileNameTitle.className = "file-name";
-    fileNameTitle.setAttribute(attributeFileName, fileName);
-    fileNameTitle.setAttribute(attributeViewColumn, viewColumn);
-    wrapper.appendChild(fileNameTitle);
+    wrapper.className = "file-wrapper";
+    wrapper.setAttribute(elementAttributeName.attributeFileName, fileName);
+    wrapper.setAttribute(elementAttributeName.attributeViewColumn, viewColumn);
+    wrapper.innerHTML = `<div class='wrapper-header'>
+    <h3 class="file-name">${shortFileName}</h3>
+    <img class='file-delete' src="${imgSrc}" alt="删除">
+    </div>`;
+    // <div class='file-delete'>删除</div>
     return wrapper;
   }
 
@@ -98,15 +78,15 @@
   function createMarkItem(data, i) {
     let item = document.createElement("div");
     let rangeStr = data.range.join(",");
-    item.setAttribute(liMarkDataRange, rangeStr);
-    item.setAttribute(decorationTypeKey, data.textEditorDecorationTypeKey);
-    item.setAttribute(liDataIndex, data.range[0]);
+    item.setAttribute(elementAttributeName.markItemRange, rangeStr);
+    item.setAttribute(elementAttributeName.decorationTypeKey, data.attributeDecorationTypeKey);
+    item.setAttribute(elementAttributeName.markItemOrder, data.range[0]);
     item.className = "mark-item";
-    item.innerHTML = `<span class='serial-number'>${i}</span>
+    item.innerHTML = `<span class='serial-number'>${i}、</span>
     <div class='file-mark-text'>
       <div class='delete-button'>删除</div>
       <pre class='file-mark-text-pre'>${encodeHtml(data.fileMarkText)}</pre>
-      <p class='mark-record'>${data.record ? data.record : ""}</p> 
+      <p class='mark-record'>${data.record ? data.record : ""}</p>
     </div>`;
     return item;
   }
@@ -119,7 +99,7 @@
      *    {range: [number, number, number],
      *    record?: string | undefined,
      *    fileMarkText?: string | undefined,
-     *    textEditorDecorationTypeKey: string}[]
+     *    attributeDecorationTypeKey: string}[]
      * } data : 全部修改的数据集合
      */
     changeAllMark: (data) => {
@@ -153,34 +133,46 @@
      *    range: [number, number, number],
      *    record?: string | undefined,
      *    fileMarkText?: string | undefined,
-     *    textEditorDecorationTypeKey: string
+     *    attributeDecorationTypeKey: string
      * } data : 新增的数据行
      */
     addMarkItem: (data) => {
-      let allMarkItem = markList.getElementsByClassName("mark-item");
-      let firstRangeNum = data.range[0];
-      let index = 1;
-      let target = null;
-      [...allMarkItem].forEach((e, i) => {
-        let order = e.getAttribute(liDataIndex);
-        if (order > firstRangeNum) {
-          if (!target) {
-            index = i + 1;
-            target = e;
-          }
-          e.setAttribute(liDataIndex, order + 1);
-          let serialNumber = e.querySelector(".serial-number");
-          if (serialNumber) {
-            serialNumber.innerText = i + 2;
-          }
-        }
+      let { fileName, range, viewColumn } = data;
+      let wrapper = document.querySelectorAll('.file-wrapper');
+      let target = [...wrapper].find((e) => {
+        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
       });
       if (target) {
-        const li = createMarkItem(data, index);
-        markList.insertBefore(li, target);
+        let allMarkItem = target.getElementsByClassName("mark-item");
+        let firstRangeNum = range[0];
+        let index = 1;
+        let objective = null;
+        [...allMarkItem].forEach((e, i) => {
+          let order = e.getAttribute(elementAttributeName.markItemOrder);
+          if (order > firstRangeNum) {
+            if (!objective) {
+              index = i + 1;
+              objective = e;
+            }
+            e.setAttribute(elementAttributeName.markItemOrder, order + 1);
+            let serialNumber = e.querySelector(".serial-number");
+            if (serialNumber) {
+              serialNumber.innerText = i + 2;
+            }
+          }
+        });
+        if (objective) {
+          const item = createMarkItem(data, index);
+          target.insertBefore(item, objective);
+        } else {
+          const item = createMarkItem(data, allMarkItem.length + 1);
+          target.appendChild(item);
+        }
       } else {
-        const li = createMarkItem(data, allMarkItem.length + 1);
-        markList.appendChild(li);
+        let listWrapper = createMarkWrapper(fileName, viewColumn);
+        const item = createMarkItem(data, 1);
+        listWrapper.appendChild(item);
+        markList.appendChild(listWrapper);
       }
     },
     /**
@@ -191,10 +183,10 @@
     deleteMarkItem: (key) => {
       let allMarkItem = markList.getElementsByClassName("mark-item");
       let index = [...allMarkItem].findIndex((e) => {
-        return e.getAttribute(decorationTypeKey) === key;
+        return e.getAttribute(elementAttributeName.decorationTypeKey) === key;
       });
       if (index > -1) {
-        markList.removeChild(allMarkItem[index]);
+        allMarkItem[index].parentNode.removeChild(allMarkItem[index]);
         let newAllMarkItem = markList.getElementsByClassName("mark-item");
         [...newAllMarkItem].forEach((ele, i) => {
           let serialNumber = ele.querySelector(".serial-number");
@@ -215,11 +207,28 @@
       let { key, record } = data;
       let allMarkItem = markList.getElementsByClassName("mark-item");
       let target = [...allMarkItem].find((e) => {
-        return e.getAttribute(decorationTypeKey) === key;
+        return e.getAttribute(elementAttributeName.decorationTypeKey) === key;
       });
       if (target) {
         let recordDom = target.querySelector(".mark-record");
         recordDom.innerText = record;
+      }
+    },
+    /**
+     * @description: 修改ViewColumn
+     * @author: depp.chen
+     * @param { fileName:string, viewColumn: string } data
+     * fileName : 文件名
+     * viewColumn : 编辑器行号
+     */
+    changeViewColumn: (data) => {
+      let { fileName, viewColumn } = data;
+      let allList = document.querySelectorAll(".file-wrapper");
+      let target = [...allList].find((e) => {
+        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+      });
+      if (target) {
+        target.setAttribute(elementAttributeName.attributeViewColumn, viewColumn);
       }
     },
   };
@@ -227,9 +236,54 @@
   // 获取扩展的数据
   window.addEventListener("message", (event) => {
     const data = event.data;
-    if (data.fileName) {
-      activeFileName = data.fileName;
-    }
     messageEventType[data.type](data.data);
+  });
+
+  markList.addEventListener("click", (e) => {
+    let target = e.path.find((ele) => ele.className === "mark-item");
+    if (target) {
+      let parentNode = target.parentNode
+      let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+      if (e.target.className === "delete-button") {
+        // 删除
+        let attributeDecorationTypeKey = target.getAttribute(elementAttributeName.decorationTypeKey);
+        vscode.postMessage({
+          type: "deleteMarkItem",
+          fileName,
+          decorationTypeKey: attributeDecorationTypeKey,
+        });
+        messageEventType["deleteMarkItem"](attributeDecorationTypeKey);
+      } else {
+        let parentNode = target.parentNode
+        let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+        let range = target.getAttribute(elementAttributeName.markItemRange);
+        let viewColumn = target.parentNode.getAttribute(elementAttributeName.attributeViewColumn);
+        vscode.postMessage({
+          type: "rangeJump",
+          range: range,
+          fileName,
+          viewColumn,
+        });
+      }
+    } else {
+      if (e.target.className === "file-name") {
+        let parentNode = e.target.parentNode.parentNode
+        let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+        let viewColumn = parentNode.getAttribute(elementAttributeName.attributeViewColumn);
+        vscode.postMessage({
+          type: "openOrShowFile",
+          fileName,
+          viewColumn,
+        });
+      } else if (e.target.className === "file-delete") {
+        let parentNode = e.target.parentNode.parentNode
+        let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+        markList.removeChild(parentNode)
+        vscode.postMessage({
+          type: "deleteFileAllMark",
+          fileName,
+        });
+      }
+    }
   });
 })();

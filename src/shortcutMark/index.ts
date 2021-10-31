@@ -146,20 +146,23 @@ export class FmShortcut {
           activeEditor?.setDecorations(textEditorDecorationType, [{ range }]);
           // 获取选中的文本
           let fileMarkText = activeEditor?.document.getText(range);
+          let attributeDecorationTypeKey = textEditorDecorationType.key
+          console.log(attributeDecorationTypeKey)
           mutations.addMarkData(fileName, {
             range: [startLine, endLine, endPosition],
             fileMarkText,
             textEditorDecorationType,
+            attributeDecorationTypeKey,
           }, activeEditor?.viewColumn);
           // 和webview脚本信息交流
           FmWebViewPanel.currentPanel?.sendMessage({
             type: webViewScriptEnum.addMarkItem,
-            fileName,
             data: {
+              fileName,
               range: [startLine, endLine, endPosition],
               fileMarkText,
               viewColumn: activeEditor?.viewColumn,
-              textEditorDecorationTypeKey: textEditorDecorationType.key,
+              attributeDecorationTypeKey,
             },
           });
         }

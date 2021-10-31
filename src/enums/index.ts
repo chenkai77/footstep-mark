@@ -38,11 +38,19 @@ export enum webViewScriptEnum {
   changeAllMark = 'changeAllMark',
   // 修改全部标记
   addMarkRecord = 'addMarkRecord',
+  // 修改viewColumn
+  changeViewColumn = 'changeViewColumn',
 }
 
 
 // 扩展页面script操作对应枚举(扩展脚本传递给插件)
 export enum  plugInOperationEnum {
   // 跳转文件
-  openOrShowFile = 'openOrShowFile'
+  openOrShowFile = 'openOrShowFile',
+  // 文件跳转范围
+  rangeJump = 'rangeJump',
+  // 删除单个标记
+  deleteMarkItem = 'deleteMarkItem',
+  // 删除整个文件的标记
+  deleteFileAllMark = 'deleteFileAllMark',
 }

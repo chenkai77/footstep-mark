@@ -4,43 +4,82 @@ body {
 
 div,
 pre,
-p {
+p,h3 {
   margin: 0;
 }
 
-.mark-list {
+.mark-list .file-wrapper{
+  box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+  margin-bottom: 16px;
+  background: #feff99;
+  padding-bottom: 16px;
+}
+
+.file-wrapper .wrapper-header{
+  /* position: relative; */
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 16px;
+  /* border-bottom: 1px solid #ddd; */
+  margin-bottom: 16px;
+  background: #f0f18b;
+  /* background: #f8f7f6; */
+
+}
+
+.wrapper-header .file-name{
+  /* position: absolute;
+  top: 0;
+  left: 16px;
+  transform: translateY(-50%); */
+  font-size: 16px;
+  color: #666;
+  max-width: 80%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  /* padding: 16px; */
+}
+
+.wrapper-header .file-delete{
+  width: 20px;
+  height: auto;
 }
 
 .mark-list .mark-item {
   cursor: pointer;
   list-style: none;
-  background: #eee;
-  border: 1px solid #ddd;
-  box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+  /* border: 1px solid #ddd; */
   display: flex;
-  margin-bottom: 8px;
+  margin: 0 24px;
+  background: #f9f995;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
 }
 
 .mark-list .mark-item .serial-number {
-  display: flex;
+  /* display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; */
+  text-align: center;
   width: 25px;
-  border-right: 1px solid #ddd;
+  /* border-right: 1px solid #ddd; */
   flex-shrink: 0;
   color: #333;
+  padding: 4px;
 }
 
 .mark-item .file-mark-text {
   flex: 1;
   overflow: hidden;
-  font-size: 12px;
+  font-size: 14px;
   position: relative;
 }
 
 .file-mark-text .file-mark-text-pre {
   padding: 8px 16px;
   color: #333;
+  /* border: 1px solid #ddd; */
 }
 
 .file-mark-text .mark-record {

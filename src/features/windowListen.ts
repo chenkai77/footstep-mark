@@ -30,7 +30,7 @@ export class FmWindowListen {
       let fileName = textEditor?.document.fileName;
       let markData;
       if(fileName){
-        markData = state.markData[fileName];
+        markData = state.markData[fileName]?.markDetails;
       }
       if(markData){
         markData.forEach(e=>{
