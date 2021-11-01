@@ -71,7 +71,7 @@ const mutations = {
     if (fileName && state.markData[fileName]) {
       state.markData[fileName].markDetails.forEach(e=>{
         e.textEditorDecorationType?.dispose();
-      })
+      });
       delete state.markData[fileName];
     }
   },
@@ -83,7 +83,6 @@ const mutations = {
   },
   // 删除所有标记数据
   clearAll() {
-    console.log(state.markData);
     for (let file in state.markData) {
       state.markData[file].markDetails.forEach((e) => {
         e.textEditorDecorationType?.dispose();

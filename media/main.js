@@ -2,8 +2,8 @@
  * @autoAdd: false
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
- * @LastEditors: kai
- * @LastEditTime: 2021-10-30 01:15:33
+ * @LastEditors: depp.chen
+ * @LastEditTime: 2021-11-01 11:47:06
  * @Description: 扩展窗口js
  */
 (function () {
@@ -60,7 +60,7 @@
 
   // 创建集合元素
   function createMarkWrapper(fileName, viewColumn) {
-    let imgSrc = document.getElementsByClassName('img-info')[0].innerText
+    let imgSrc = document.getElementsByClassName('img-info')[0].innerText;
     let wrapper = document.createElement("div");
     let shortFileName = calculateFileName(fileName);
     wrapper.className = "file-wrapper";
@@ -82,11 +82,13 @@
     item.setAttribute(elementAttributeName.decorationTypeKey, data.attributeDecorationTypeKey);
     item.setAttribute(elementAttributeName.markItemOrder, data.range[0]);
     item.className = "mark-item";
-    item.innerHTML = `<span class='serial-number'>${i}、</span>
-    <div class='file-mark-text'>
-      <div class='delete-button'>删除</div>
+    item.innerHTML = `<div class='file-mark-text'>
+      <span class='serial-number'>${i}、</span>
       <pre class='file-mark-text-pre'>${encodeHtml(data.fileMarkText)}</pre>
+    </div>
+    <div class='mark-footer'>
       <p class='mark-record'>${data.record ? data.record : ""}</p>
+      <div class='delete-button'>删除</div>
     </div>`;
     return item;
   }
@@ -178,16 +180,34 @@
     /**
      * @description: 删除标记
      * @author: depp.chen
-     * @param { string } key : textEditorDecorationType唯一标识
+     * @param {
+     *    {fileName: string,
+     *    attributeDecorationTypeKey: string(textEditorDecorationType唯一标识)
+     * } data
      */
-    deleteMarkItem: (key) => {
-      let allMarkItem = markList.getElementsByClassName("mark-item");
+    deleteMarkItem: (data) => {
+      let { fileName, attributeDecorationTypeKey } = data;
+      let allList = document.querySelectorAll(".file-wrapper");
+      let target = [...allList].find((e) => {
+        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+      });
+      if (!target) {        
+        return;
+      }
+      let allMarkItem = target.getElementsByClassName("mark-item");
       let index = [...allMarkItem].findIndex((e) => {
-        return e.getAttribute(elementAttributeName.decorationTypeKey) === key;
+        return e.getAttribute(elementAttributeName.decorationTypeKey) === attributeDecorationTypeKey;
       });
       if (index > -1) {
         allMarkItem[index].parentNode.removeChild(allMarkItem[index]);
-        let newAllMarkItem = markList.getElementsByClassName("mark-item");
+        let newAllMarkItem = target.getElementsByClassName("mark-item");
+        if (!newAllMarkItem || !newAllMarkItem.length) {
+          markList.removeChild(target);
+          vscode.postMessage({
+            type: "deleteFileAllMark",
+            fileName,
+          });
+        }
         [...newAllMarkItem].forEach((ele, i) => {
           let serialNumber = ele.querySelector(".serial-number");
           if (serialNumber) {
@@ -242,7 +262,7 @@
   markList.addEventListener("click", (e) => {
     let target = e.path.find((ele) => ele.className === "mark-item");
     if (target) {
-      let parentNode = target.parentNode
+      let parentNode = target.parentNode;
       let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
       if (e.target.className === "delete-button") {
         // 删除
@@ -252,9 +272,9 @@
           fileName,
           decorationTypeKey: attributeDecorationTypeKey,
         });
-        messageEventType["deleteMarkItem"](attributeDecorationTypeKey);
+        messageEventType["deleteMarkItem"]({ fileName, attributeDecorationTypeKey});
       } else {
-        let parentNode = target.parentNode
+        let parentNode = target.parentNode;
         let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
         let range = target.getAttribute(elementAttributeName.markItemRange);
         let viewColumn = target.parentNode.getAttribute(elementAttributeName.attributeViewColumn);
@@ -267,7 +287,7 @@
       }
     } else {
       if (e.target.className === "file-name") {
-        let parentNode = e.target.parentNode.parentNode
+        let parentNode = e.target.parentNode.parentNode;
         let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
         let viewColumn = parentNode.getAttribute(elementAttributeName.attributeViewColumn);
         vscode.postMessage({
@@ -276,9 +296,9 @@
           viewColumn,
         });
       } else if (e.target.className === "file-delete") {
-        let parentNode = e.target.parentNode.parentNode
+        let parentNode = e.target.parentNode.parentNode;
         let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
-        markList.removeChild(parentNode)
+        markList.removeChild(parentNode);
         vscode.postMessage({
           type: "deleteFileAllMark",
           fileName,

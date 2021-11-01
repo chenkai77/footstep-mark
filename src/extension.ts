@@ -8,7 +8,6 @@ import { FmWindowListen } from './features/windowListen';
 // 在第一次执行命令时，才会激活扩展程序。
 // 当扩展程序被激活的时候，会调用此方法。
 export async function activate(context: ExtensionContext) {
-  console.log(context.extensionUri, context.extensionPath);
   // 将上下文储存至store
   state.context = context;
   // 初始化底部状态栏

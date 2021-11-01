@@ -3,12 +3,11 @@
  * @Author: depp.chen
  * @Date: 2021-10-14 16:15:42
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-29 11:45:32
+ * @LastEditTime: 2021-11-01 11:37:27
  * @Description: 公共方法
  */
 
 import { commands, Uri, ExtensionContext } from 'vscode';
-import { state } from '../store';
 
 /**
  * @description: 判断command是否已经注册
@@ -21,11 +20,24 @@ export const commandIsRegister = async (key: string) => {
 };
 
 /**
- * @description: 根据当前Uri创建新uri
+ * @description: 对齐去除前面空格
  * @author: depp.chen
- * @param { string[] } path : 路径集合
+ * @param { string } text : 文本
  */
-export const createNewUri = (path: string[]) => {
-  const newUri = Uri.joinPath((state.context as ExtensionContext).extensionUri, ...path);
-  return newUri;
+export const removeBlankSpace = (text: string | undefined) => {
+  if (!text) {
+     return '';
+  }
+  let textArr = text?.split('\n');
+  let minIndex = text.length;
+  textArr?.forEach(e => {
+    let index = e.search(/[^\s]/);
+    if (index > -1 && index < minIndex) {
+      minIndex = index;
+    }
+  });
+  textArr = textArr.map(e => {
+    return e.substr(minIndex);
+  });
+  return textArr.join('\n'); 
 };

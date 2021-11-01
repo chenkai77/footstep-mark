@@ -1,8 +1,8 @@
 /*
  * @Author: depp.chen
  * @Date: 2021-10-21 11:23:55
- * @LastEditors: kai
- * @LastEditTime: 2021-10-30 01:18:31
+ * @LastEditors: depp.chen
+ * @LastEditTime: 2021-11-01 11:31:38
  * @Description: 扩展编辑器
  */
 import {
@@ -30,7 +30,6 @@ import {
 } from "../enums";
 import { state, getter, mutations } from "../store";
 import { WebviewStatusBar } from "../statusBar/webviewBar";
-import { createNewUri } from "../utils";
 
 // 随机码生成器
 function getNonce() {
@@ -65,7 +64,7 @@ export class FmWebViewPanel {
         this.dispose();
       },
       null,
-      this.disposables
+      // this.disposables
     );
   }
   // 扩展编辑器标记枚举
@@ -88,6 +87,7 @@ export class FmWebViewPanel {
       return;
     }
     let visibleTextEditors = window.visibleTextEditors;
+    console.log(visibleTextEditors);
     const webView = window.createWebviewPanel(
       FmWebViewPanel.extensionWebViewType,
       "操作栏",
@@ -104,14 +104,14 @@ export class FmWebViewPanel {
   public dispose() {
     FmWebViewPanel.currentPanel = undefined;
     this.FMwebView.dispose();
-    console.log(this.disposables.length, this.disposables, "this.disposables");
+    // console.log(this.disposables.length, this.disposables, "this.disposables");
     WebviewStatusBar.currentInstance?.changeButtonOff();
-    while (this.disposables.length) {
-      const x = this.disposables.pop();
-      if (x) {
-        x.dispose();
-      }
-    }
+    // while (this.disposables.length) {
+    //   const x = this.disposables.pop();
+    //   if (x) {
+    //     x.dispose();
+    //   }
+    // }
   }
 
   private registerMessageFunction: any = {
@@ -180,7 +180,7 @@ export class FmWebViewPanel {
       }
     },
     [plugInOperationEnum.deleteFileAllMark]: (message:any) => {
-      mutations.deleteFileAllMarkData(message.fileName)
+      mutations.deleteFileAllMarkData(message.fileName);
     }
   };
 
@@ -191,29 +191,6 @@ export class FmWebViewPanel {
   public async registerReceiveMessage() {
     this.FMwebView.webview.onDidReceiveMessage(async (message) => {
       this.registerMessageFunction[message.type](message);
-      // if (message.type === plugInOperationEnum.openOrShowFile) {
-      // } else if (message.type === plugInOperationEnum.rangeJump) {
-      // } else if (message.fileName && !message.type) {
-      //   let visibleTextEditors = window.visibleTextEditors;
-      //   let targetFile = visibleTextEditors.find((e) => {
-      //     return e.document.fileName === message.fileName;
-      //   });
-      //   if (!targetFile) {
-      //     return;
-      //   }
-      //   if (message.decorationTypeKey) {
-      //   } else if (message.range) {
-      //     let messageRange = message.range.split(",");
-      //     let rangeArr = messageRange.map((e: string) => Number(e));
-      //     targetFile.revealRange(
-      //       new Range(
-      //         new Position(rangeArr[0], 0),
-      //         new Position(rangeArr[1], rangeArr[2])
-      //       ),
-      //       TextEditorRevealType.InCenter
-      //     );
-      //   }
-      // }
     });
   }
 
@@ -233,28 +210,14 @@ export class FmWebViewPanel {
    * @author: depp.chen
    */
   public changeListData() {
-    let activeTextEditor = window.activeTextEditor;
-    if (activeTextEditor) {
-      // let fileName = activeTextEditor.document.fileName;
-      // let markData = state.markData[fileName] || [];
-      // let data = markData.map(e=>{
-      //   return {
-      //     ...e,
-      //     textEditorDecorationType: undefined,
-      //     textEditorDecorationTypeKey: e.textEditorDecorationType?.key,
-      //   };
-      // });
-
-      let data = {
-        ...state.markData,
-        extensionPath: state.context?.extensionPath || "",
-      };
-      console.log(data);
-      FmWebViewPanel.currentPanel?.sendMessage({
-        type: webViewScriptEnum.changeAllMark,
-        data,
-      });
-    }
+    let data = {
+      ...state.markData,
+      extensionPath: state.context?.extensionPath || "",
+    };
+    FmWebViewPanel.currentPanel?.sendMessage({
+      type: webViewScriptEnum.changeAllMark,
+      data,
+    });
   }
 
   /**

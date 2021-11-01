@@ -2,8 +2,8 @@
  * @autoAdd: false
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
- * @LastEditors: kai
- * @LastEditTime: 2021-10-30 01:03:12
+ * @LastEditors: depp.chen
+ * @LastEditTime: 2021-11-01 11:50:25
  * @Description: 快捷键标记操作
  */
 import {
@@ -19,6 +19,7 @@ import { commandIsRegister } from "../utils/index";
 import { state, mutations } from "../store";
 import { FmWebViewPanel } from "../features/webView";
 import { webViewScriptEnum } from "../enums/index";
+import { removeBlankSpace } from "../utils";
 export class FmShortcut {
   constructor() {
     this.registerLocationMark();
@@ -124,7 +125,7 @@ export class FmShortcut {
       let startLine = activeEditor?.selection.start.line;
       let endLine = activeEditor?.selection.end.line;
       let fileName = activeEditor?.document.fileName;
-      if (startLine && endLine && fileName) {
+      if (startLine !== undefined && endLine !== undefined && fileName) {
         if (this.calculateRange(startLine, endLine, fileName)) {
           return;
         }
@@ -146,8 +147,10 @@ export class FmShortcut {
           activeEditor?.setDecorations(textEditorDecorationType, [{ range }]);
           // 获取选中的文本
           let fileMarkText = activeEditor?.document.getText(range);
-          let attributeDecorationTypeKey = textEditorDecorationType.key
-          console.log(attributeDecorationTypeKey)
+          
+          fileMarkText = removeBlankSpace(fileMarkText);
+            
+          let attributeDecorationTypeKey = textEditorDecorationType.key;
           mutations.addMarkData(fileName, {
             range: [startLine, endLine, endPosition],
             fileMarkText,
@@ -200,7 +203,10 @@ export class FmShortcut {
             // 和webview脚本信息交流
             FmWebViewPanel.currentPanel?.sendMessage({
               type: webViewScriptEnum.deleteMarkItem,
-              data: target.textEditorDecorationType?.key,
+              data: {
+                fileName,
+                attributeDecorationTypeKey:target.textEditorDecorationType?.key,
+              }
             });
           }
         }
@@ -231,7 +237,9 @@ export class FmShortcut {
             return startLine && endLine && start <= startLine && end >= endLine;
           });
           if (target && target.textEditorDecorationType) {
-            let record = await window.showInputBox();
+            let record = await window.showInputBox({
+              placeHolder: '请输入标记备注'
+            });
             target.record = record;
             let range = new Range(
               new Position(target.range[0], 0),

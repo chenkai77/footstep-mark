@@ -9,37 +9,29 @@ p,h3 {
 }
 
 .mark-list .file-wrapper{
-  box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
   margin-bottom: 16px;
-  background: #feff99;
+  background: #fff;
   padding-bottom: 16px;
 }
 
 .file-wrapper .wrapper-header{
-  /* position: relative; */
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   padding: 16px 16px;
-  /* border-bottom: 1px solid #ddd; */
   margin-bottom: 16px;
-  background: #f0f18b;
-  /* background: #f8f7f6; */
+  background: #eee;
 
 }
 
 .wrapper-header .file-name{
-  /* position: absolute;
-  top: 0;
-  left: 16px;
-  transform: translateY(-50%); */
   font-size: 16px;
   color: #666;
   max-width: 80%;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
-  /* padding: 16px; */
 }
 
 .wrapper-header .file-delete{
@@ -50,40 +42,41 @@ p,h3 {
 .mark-list .mark-item {
   cursor: pointer;
   list-style: none;
-  /* border: 1px solid #ddd; */
-  display: flex;
   margin: 0 24px;
-  background: #f9f995;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
-}
-
-.mark-list .mark-item .serial-number {
-  /* display: flex;
-  align-items: center;
-  justify-content: center; */
-  text-align: center;
-  width: 25px;
-  /* border-right: 1px solid #ddd; */
-  flex-shrink: 0;
-  color: #333;
-  padding: 4px;
+  margin-bottom: 16px;
 }
 
 .mark-item .file-mark-text {
-  flex: 1;
-  overflow: hidden;
   font-size: 14px;
-  position: relative;
+  display: flex;
+}
+
+.mark-item .mark-footer{
+  display: flex;
+  font-size: 14px;
+  padding: 4px 0;
+}
+
+.mark-list .mark-item .serial-number {
+  text-align: center;
+  width: 25px;
+  flex-shrink: 0;
+  color: #333;
+  padding: 4px;
+  background: #ddd;
 }
 
 .file-mark-text .file-mark-text-pre {
   padding: 8px 16px;
   color: #333;
-  /* border: 1px solid #ddd; */
+  flex: 1;
+  width: 0;
+  overflow: hidden;
+  background: #eee;
 }
 
-.file-mark-text .mark-record {
-  border-top: 1px solid #ddd;
+.mark-footer .mark-record {
   height: 20px;
   width: 100%;
   line-height: 20px;
@@ -92,12 +85,18 @@ p,h3 {
   overflow: hidden;
   white-space: nowrap;
   color: #333;
+  flex: 1;
 }
 
-.file-mark-text .delete-button {
-  position: absolute;
+.mark-footer .delete-button {
   color: crimson;
-  right: 8px;
-  top: 4px;
   text-decoration: underline;
+  width: 40px;
+  text-align: center;
+}
+
+.img-info{
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }

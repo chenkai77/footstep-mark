@@ -2,7 +2,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-25 11:14:36
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-25 11:29:50
+ * @LastEditTime: 2021-11-01 10:39:39
  * @Description:
  */
 import { window, Range, Position} from "vscode";
@@ -52,9 +52,6 @@ export class FmWindowListen {
             },
           ]);
         });
-      }
-      if (textEditor && FmWebViewPanel.currentPanel) {
-        FmWebViewPanel.currentPanel.changeListData();
       }
     });
   }
