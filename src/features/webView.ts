@@ -2,7 +2,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-21 11:23:55
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-01 11:31:38
+ * @LastEditTime: 2021-11-01 14:31:14
  * @Description: 扩展编辑器
  */
 import {
@@ -210,9 +210,13 @@ export class FmWebViewPanel {
    * @author: depp.chen
    */
   public changeListData() {
+    let rootPath = '';
+    if (workspace.workspaceFolders) {
+      rootPath = workspace.workspaceFolders[0].uri.fsPath;
+    }
     let data = {
       ...state.markData,
-      extensionPath: state.context?.extensionPath || "",
+      rootPath,
     };
     FmWebViewPanel.currentPanel?.sendMessage({
       type: webViewScriptEnum.changeAllMark,

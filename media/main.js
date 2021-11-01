@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-01 11:47:06
+ * @LastEditTime: 2021-11-01 14:30:07
  * @Description: 扩展窗口js
  */
 (function () {
@@ -24,8 +24,7 @@
     attributeViewColumn: 'view-column',
   };
 
-  let activeFileName = "";
-  let extensionPath = "";
+  let rootPath = "";
   let REGX_HTML_ENCODE = /“|&|’|<|>|[\x00-\x20]|[\x7F-\xFF]|[\u0100-\u2700]/g;
 
   /**
@@ -34,8 +33,8 @@
    * @param { string } fileName : 文件名
    */
   function calculateFileName(fileName) {
-    if (extensionPath) {
-      fileName = fileName.substr(extensionPath.length);
+    if (rootPath) {
+      fileName = fileName.substr(rootPath.length);
     }
     return fileName;
   }
@@ -107,12 +106,12 @@
     changeAllMark: (data) => {
       if (data) {
         markList.innerHTML = "";
-        if (data.extensionPath) {
-          extensionPath = data.extensionPath;
+        if (data.rootPath) {
+          rootPath = data.rootPath;
         }
         let fragment = document.createDocumentFragment();
         for (let fileName in data) {
-          if (fileName === "extensionPath") {
+          if (fileName === "rootPath") {
             continue;
           }
           let listWrapper = createMarkWrapper(
