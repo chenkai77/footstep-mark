@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-01 14:30:07
+ * @LastEditTime: 2021-11-02 17:08:18
  * @Description: 扩展窗口js
  */
 (function () {
@@ -155,7 +155,7 @@
               index = i + 1;
               objective = e;
             }
-            e.setAttribute(elementAttributeName.markItemOrder, order + 1);
+            e.setAttribute(elementAttributeName.markItemOrder, Number(order) + 1);
             let serialNumber = e.querySelector(".serial-number");
             if (serialNumber) {
               serialNumber.innerText = i + 2;

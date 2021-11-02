@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-01 14:32:19
+ * @LastEditTime: 2021-11-02 16:57:25
  * @Description: 快捷键标记操作
  */
 import {
@@ -13,6 +13,8 @@ import {
   Position,
   OverviewRulerLane,
   Disposable,
+  Uri,
+  ExtensionContext
 } from "vscode";
 import { shortcutMarkEnum } from "../enums";
 import { commandIsRegister } from "../utils/index";
@@ -24,19 +26,15 @@ export class FmShortcut {
   constructor() {
     this.registerLocationMark();
     this.registerMarkRecord();
-    this.registerRemoveMark();
   }
 
   public LocationMarkDisposable: Disposable | undefined;
   public MarkRecordDisposable: Disposable | undefined;
-  public RemoveMarkDisposable: Disposable | undefined;
 
   // 快捷标记command
   private static readonly LocationMark = shortcutMarkEnum.locationMark;
   // 弹出输入框command
   private static readonly MarkRecord = shortcutMarkEnum.markRecord;
-  // 删除标记
-  private static readonly RemoveMark = shortcutMarkEnum.removeMark;
 
   // FmShortcut类实例
   public static currentFmShortcut: FmShortcut | undefined;
@@ -50,7 +48,6 @@ export class FmShortcut {
   public static disposeShortcutMark() {
     FmShortcut.currentFmShortcut?.LocationMarkDisposable?.dispose();
     FmShortcut.currentFmShortcut?.MarkRecordDisposable?.dispose();
-    FmShortcut.currentFmShortcut?.RemoveMarkDisposable?.dispose();
   }
 
   async registerLocationMark() {
@@ -81,20 +78,6 @@ export class FmShortcut {
     );
   }
 
-  async registerRemoveMark() {
-    let isRegister = await commandIsRegister(FmShortcut.RemoveMark);
-    // 如果已经注册了command Key则不再进行注册
-    if (isRegister) {
-      return;
-    }
-    this.RemoveMarkDisposable = commands.registerCommand(
-      FmShortcut.RemoveMark,
-      async () => {
-        this.removeMark();
-      }
-    );
-  }
-
   /**
    * @description: 计算增加样式区间是否已经存在，避免重复渲染样式
    * @author: depp.chen
@@ -103,12 +86,32 @@ export class FmShortcut {
    * @param { string } fileName： 当前文件名
    */
   private calculateRange(startLine: number, endLine: number, fileName: string) {
-    let markData = state.markData[fileName]?.markDetails;
-    if (markData) {
-      let target = markData.some((e) => {
-        return e.range[0] <= startLine && e.range[1] >= endLine;
-      });
-      return target;
+    let activeMarkData = state.markData[fileName]?.markDetails;
+    if (activeMarkData) {      
+      let index = -1;
+      if (activeMarkData) {
+        let target = activeMarkData.find((e, i) => {
+          if (e.range[0] <= startLine && e.range[1] >= endLine) {
+            index = i;
+            return true;
+          }
+        });
+        if (target) {
+          target.textEditorDecorationType?.dispose();
+          mutations.deleteMarkData(fileName, index);
+          // 和webview脚本信息交流
+          FmWebViewPanel.currentPanel?.sendMessage({
+            type: webViewScriptEnum.deleteMarkItem,
+            data: {
+              fileName,
+              attributeDecorationTypeKey:target.textEditorDecorationType?.key,
+            }
+          });
+        } else {
+          return false;
+        }
+      }
+      return true;
     } else {
       return false;
     }
@@ -137,11 +140,19 @@ export class FmShortcut {
             new Position(startLine, 0),
             new Position(endLine, endPosition)
           );
+          const deleteImgPath = Uri.joinPath(
+            (state.context as ExtensionContext).extensionUri,
+            "media",
+            "icon.svg"
+          );
           let textEditorDecorationType = window.createTextEditorDecorationType({
             overviewRulerColor: "rgba(208,2,27,1)",
-            backgroundColor: "rgba(208,2,27,0.2)",
+            backgroundColor: "rgba(208,2,27,0.1)",
             // 右侧光标
+            isWholeLine: true,
             overviewRulerLane: OverviewRulerLane.Full,
+            gutterIconPath: deleteImgPath,
+            gutterIconSize: 'contain'
           });
           // 样式添加
           activeEditor?.setDecorations(textEditorDecorationType, [{ range }]);
@@ -168,47 +179,6 @@ export class FmShortcut {
               attributeDecorationTypeKey,
             },
           });
-        }
-      }
-    } catch (error: any) {
-      const message = error.message ?? error;
-      window.showErrorMessage(message);
-    }
-  }
-
-  /**
-   * @description: 快速删除标记
-   * @author: depp.chen
-   */
-  private removeMark() {
-    // 当前激活的文档
-    const activeEditor = window.activeTextEditor;
-    try {
-      let startLine = activeEditor?.selection.start.line;
-      let endLine = activeEditor?.selection.end.line;
-      let fileName = activeEditor?.document.fileName;
-      let index = -1;
-      if (startLine && endLine && fileName&& state.markData[fileName] ) {
-        let activeMarkData = state.markData[fileName].markDetails;
-        if (activeMarkData) {
-          let target = activeMarkData.find((e, i) => {
-            if (e.range[0] === startLine && e.range[1] === endLine) {
-              index = i;
-              return true;
-            }
-          });
-          if (target) {
-            target.textEditorDecorationType?.dispose();
-            mutations.deleteMarkData(fileName, index);
-            // 和webview脚本信息交流
-            FmWebViewPanel.currentPanel?.sendMessage({
-              type: webViewScriptEnum.deleteMarkItem,
-              data: {
-                fileName,
-                attributeDecorationTypeKey:target.textEditorDecorationType?.key,
-              }
-            });
-          }
         }
       }
     } catch (error: any) {

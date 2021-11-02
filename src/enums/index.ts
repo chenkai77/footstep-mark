@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-12 15:14:29
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-29 13:56:24
+ * @LastEditTime: 2021-11-02 16:57:46
  * @Description: 枚举
  */
 
@@ -13,8 +13,6 @@ export enum shortcutMarkEnum {
   locationMark = 'footstepMark.locationMark',
   // 给标记写记录文本command
   markRecord = 'footstepMark.markRecord',
-  // 删除标记
-  removeMark = 'footstepMark.removeMark'
 }
 
 // 底部状态栏按钮枚举
