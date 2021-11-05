@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-02 17:08:18
+ * @LastEditTime: 2021-11-05 16:39:04
  * @Description: 扩展窗口js
  */
 (function () {
@@ -250,6 +250,57 @@
         target.setAttribute(elementAttributeName.attributeViewColumn, viewColumn);
       }
     },
+    /**
+     * @description: 修改ViewColumn
+     * @author: depp.chen
+     * @param { fileName:string, line: number, enterNum: number } data
+     * fileName : 文件名
+     * line : 编辑的行号
+     * difference : 总行数差别
+     */
+    changeRange: (data) => {
+      let { fileName, line, difference } = data;
+      let allList = document.querySelectorAll(".file-wrapper");
+      let target = [...allList].find((e) => {
+        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+      });
+      if (target) {
+        let markItemList = target.getElementsByClassName('mark-item');
+        [...markItemList].forEach(e => {
+          let range = e.getAttribute(elementAttributeName.markItemRange);
+          range = range.split(',').map(e=>Number(e));
+          if (range[0]<=line && range[1]>=line) {
+            let newEnd = range[1] + difference;
+            range[1] = newEnd<range[0]?range[0]:newEnd;
+            e.setAttribute(elementAttributeName.markItemRange, range.join(','));
+          }else if (range[0]>line) {
+            let newStart = range[0] + difference;
+            let newEnd = range[1] + difference;
+            range[0] = newStart<0?0:newStart;
+            range[1] = newEnd<0?0:newEnd;
+            e.setAttribute(elementAttributeName.markItemRange, range.join(','));
+          }
+        });
+      }
+    },
+    /**
+     * @description: 修改标记文本
+     * @author: depp.chen
+     * @param { key:string, fileText: string } data
+     * key :textEditorDecorationType唯一标识
+     * fileText : 标记的文本
+     */
+    changeMarkText(data) {
+      let { key, fileText } = data;
+      let allMarkItem = markList.getElementsByClassName("mark-item");
+      let target = [...allMarkItem].find((e) => {
+        return e.getAttribute(elementAttributeName.decorationTypeKey) === key;
+      });
+      if (target) {
+        let fileTextDom = target.querySelector(".file-mark-text-pre");
+        fileTextDom.innerText = fileText;
+      }
+    }
   };
 
   // 获取扩展的数据

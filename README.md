@@ -20,7 +20,7 @@
 
 ## 侧边栏样式说明
 
-![](https://qiniu.img.chenkai.xyz/footstep202121111.png)
+![](https://qiniu.img.chenkai.xyz/footstep-mark10.png)
 
 侧边栏样式如图
 

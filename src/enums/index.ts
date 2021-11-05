@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-12 15:14:29
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-02 16:57:46
+ * @LastEditTime: 2021-11-05 16:29:49
  * @Description: 枚举
  */
 
@@ -38,6 +38,10 @@ export enum webViewScriptEnum {
   addMarkRecord = 'addMarkRecord',
   // 修改viewColumn
   changeViewColumn = 'changeViewColumn',
+  // 修改范围
+  changeRange = 'changeRange',
+  // 修改标记文本
+  changeMarkText = 'changeMarkText',
 }
 
 

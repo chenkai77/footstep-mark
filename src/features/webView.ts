@@ -2,26 +2,19 @@
  * @Author: depp.chen
  * @Date: 2021-10-21 11:23:55
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-01 14:31:14
+ * @LastEditTime: 2021-11-05 16:42:48
  * @Description: 扩展编辑器
  */
 import {
   window,
-  StatusBarItem,
-  StatusBarAlignment,
   Uri,
-  commands,
   workspace,
-  OverviewRulerLane,
   Range,
   Position,
-  Location,
   TextEditorRevealType,
-  ViewColumn,
   WebviewPanel,
   Disposable,
   ExtensionContext,
-  Webview,
 } from "vscode";
 import {
   extensionWebViewEnum,
