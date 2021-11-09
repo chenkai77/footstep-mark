@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-05 14:21:53
+ * @LastEditTime: 2021-11-09 12:47:22
  * @Description: 快捷键标记操作
  */
 import {
@@ -62,6 +62,7 @@ export class FmShortcut {
         this.locationMark();
       }
     );
+    state.context?.subscriptions.push(this.LocationMarkDisposable);
   }
 
   async registerMarkRecord() {
@@ -76,6 +77,7 @@ export class FmShortcut {
         this.markRecord();
       }
     );
+    state.context?.subscriptions.push(this.MarkRecordDisposable);
   }
 
   /**
