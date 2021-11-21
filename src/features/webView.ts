@@ -80,13 +80,16 @@ export class FmWebViewPanel {
       return;
     }
     let visibleTextEditors = window.visibleTextEditors;
-    console.log(visibleTextEditors);
     const webView = window.createWebviewPanel(
       FmWebViewPanel.extensionWebViewType,
       "操作栏",
       { preserveFocus: false, viewColumn: visibleTextEditors.length + 1 }
     );
     FmWebViewPanel.currentPanel = new FmWebViewPanel(webView);
+	// 扩展webview移动位置时
+	webView.onDidChangeViewState(e=>{
+		FmWebViewPanel.currentPanel?.changeListData();
+	});
     FmWebViewPanel.currentPanel.changeListData();
   }
 
