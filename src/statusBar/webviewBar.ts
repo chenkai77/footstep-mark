@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-12 14:55:40
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-10-27 15:40:09
+ * @LastEditTime: 2024-04-24 16:29:59
  * @Description: 状态栏扩展
  */
 import { window, StatusBarItem, StatusBarAlignment, commands } from "vscode";
@@ -21,7 +21,7 @@ export class WebviewStatusBar {
   private constructor(StatusBarItem: StatusBarItem) {
     this.FMstatusBar = StatusBarItem;
     this.FMstatusBar.command = WebviewStatusBar.statusBarShowWebView;
-    this.FMstatusBar.text = `$(repo-clone)off`;
+    this.FMstatusBar.text = `$(explorer-view-icon)off`;
     this.registerFMStatusCommands();
     this.FMstatusBar.show();
   }
@@ -68,7 +68,7 @@ export class WebviewStatusBar {
    * @author: depp.chen
    */
   public changeButtonOn() {
-    this.FMstatusBar.text = `$(repo-clone)on`;
+    this.FMstatusBar.text = `$(explorer-view-icon)on`;
   }
 
   /**
@@ -76,6 +76,6 @@ export class WebviewStatusBar {
    * @author: depp.chen
    */
   public changeButtonOff() {
-    this.FMstatusBar.text = `$(repo-clone)off`;
+    this.FMstatusBar.text = `$(explorer-view-icon)off`;
   }
 }

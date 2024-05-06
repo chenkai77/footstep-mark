@@ -3,7 +3,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-14 16:07:35
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-09 12:47:22
+ * @LastEditTime: 2024-04-25 09:46:18
  * @Description: 快捷键标记操作
  */
 import {
@@ -14,7 +14,7 @@ import {
   OverviewRulerLane,
   Disposable,
   Uri,
-  ExtensionContext
+  ExtensionContext,
 } from "vscode";
 import { shortcutMarkEnum } from "../enums";
 import { commandIsRegister } from "../utils/index";
@@ -89,7 +89,7 @@ export class FmShortcut {
    */
   private calculateRange(startLine: number, endLine: number, fileName: string) {
     let activeMarkData = state.markData[fileName]?.markDetails;
-    if (activeMarkData) {      
+    if (activeMarkData) {
       let index = -1;
       if (activeMarkData) {
         let target = activeMarkData.find((e, i) => {
@@ -106,8 +106,8 @@ export class FmShortcut {
             type: webViewScriptEnum.deleteMarkItem,
             data: {
               fileName,
-              attributeDecorationTypeKey:target.textEditorDecorationType?.key,
-            }
+              attributeDecorationTypeKey: target.textEditorDecorationType?.key,
+            },
           });
         } else {
           return false;
@@ -142,34 +142,39 @@ export class FmShortcut {
             new Position(startLine, 0),
             new Position(endLine, endPosition)
           );
-          const deleteImgPath = Uri.joinPath(
-            (state.context as ExtensionContext).extensionUri,
-            "media",
-            "icon.svg"
-          );
+          // const deleteImgPath = Uri.joinPath(
+          //   (state.context as ExtensionContext).extensionUri,
+          //   "media",
+          //   "icon.svg"
+          // );
           let textEditorDecorationType = window.createTextEditorDecorationType({
             overviewRulerColor: "rgba(208,2,27,1)",
             backgroundColor: "rgba(208,2,27,0.1)",
             // 右侧光标
             isWholeLine: true,
             overviewRulerLane: OverviewRulerLane.Full,
-            gutterIconPath: deleteImgPath,
-            gutterIconSize: 'contain'
+            // gutterIconPath: deleteImgPath,
+            gutterIconSize: "contain",
           });
           // 样式添加
           activeEditor?.setDecorations(textEditorDecorationType, [{ range }]);
           // 获取选中的文本
           let fileMarkText = activeEditor?.document.getText(range);
-          
+
           fileMarkText = removeBlankSpace(fileMarkText);
-            
+
           let attributeDecorationTypeKey = textEditorDecorationType.key;
-          mutations.addMarkData(fileName, {
-            range: [startLine, endLine, endPosition],
-            fileMarkText,
-            textEditorDecorationType,
-            attributeDecorationTypeKey,
-          }, activeEditor?.viewColumn, activeEditor?.document.lineCount);
+          mutations.addMarkData(
+            fileName,
+            {
+              range: [startLine, endLine, endPosition],
+              fileMarkText,
+              textEditorDecorationType,
+              attributeDecorationTypeKey,
+            },
+            activeEditor?.viewColumn,
+            activeEditor?.document.lineCount
+          );
           // 和webview脚本信息交流
           FmWebViewPanel.currentPanel?.sendMessage({
             type: webViewScriptEnum.addMarkItem,
@@ -211,7 +216,7 @@ export class FmShortcut {
           });
           if (target && target.textEditorDecorationType) {
             let record = await window.showInputBox({
-              placeHolder: '请输入标记备注'
+              placeHolder: "请输入标记备注",
             });
             target.record = record;
             let range = new Range(

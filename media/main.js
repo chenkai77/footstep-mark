@@ -3,25 +3,25 @@
  * @Author: depp.chen
  * @Date: 2021-10-15 14:39:37
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-05 16:39:04
+ * @LastEditTime: 2024-04-24 18:16:29
  * @Description: 扩展窗口js
  */
 (function () {
   const vscode = acquireVsCodeApi();
-  // 最外层袁术
+  // 最外层元素
   const markList = document.querySelector(".mark-list");
   // 属性名枚举
   const elementAttributeName = {
     // 标记项序号属性
-    markItemOrder: 'data-order',
+    markItemOrder: "data-order",
     // 标记项range范围合并属性
-    markItemRange: 'markData-range',
+    markItemRange: "markData-range",
     // 标记项vscode装饰key属性
-    decorationTypeKey: 'decoration-type',
+    decorationTypeKey: "decoration-type",
     // 文件名属性
-    attributeFileName: 'file-name',
+    attributeFileName: "file-name",
     // 文件对于编辑器行号属性
-    attributeViewColumn: 'view-column',
+    attributeViewColumn: "view-column",
   };
 
   let rootPath = "";
@@ -59,7 +59,7 @@
 
   // 创建集合元素
   function createMarkWrapper(fileName, viewColumn) {
-    let imgSrc = document.getElementsByClassName('img-info')[0].innerText;
+    let imgSrc = document.getElementsByClassName("img-info")[0].innerText;
     let wrapper = document.createElement("div");
     let shortFileName = calculateFileName(fileName);
     wrapper.className = "file-wrapper";
@@ -78,7 +78,10 @@
     let item = document.createElement("div");
     let rangeStr = data.range.join(",");
     item.setAttribute(elementAttributeName.markItemRange, rangeStr);
-    item.setAttribute(elementAttributeName.decorationTypeKey, data.attributeDecorationTypeKey);
+    item.setAttribute(
+      elementAttributeName.decorationTypeKey,
+      data.attributeDecorationTypeKey
+    );
     item.setAttribute(elementAttributeName.markItemOrder, data.range[0]);
     item.className = "mark-item";
     item.innerHTML = `<div class='file-mark-text'>
@@ -139,9 +142,11 @@
      */
     addMarkItem: (data) => {
       let { fileName, range, viewColumn } = data;
-      let wrapper = document.querySelectorAll('.file-wrapper');
+      let wrapper = document.querySelectorAll(".file-wrapper");
       let target = [...wrapper].find((e) => {
-        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+        return (
+          e.getAttribute(elementAttributeName.attributeFileName) === fileName
+        );
       });
       if (target) {
         let allMarkItem = target.getElementsByClassName("mark-item");
@@ -155,7 +160,10 @@
               index = i + 1;
               objective = e;
             }
-            e.setAttribute(elementAttributeName.markItemOrder, Number(order) + 1);
+            e.setAttribute(
+              elementAttributeName.markItemOrder,
+              Number(order) + 1
+            );
             let serialNumber = e.querySelector(".serial-number");
             if (serialNumber) {
               serialNumber.innerText = i + 2;
@@ -188,14 +196,19 @@
       let { fileName, attributeDecorationTypeKey } = data;
       let allList = document.querySelectorAll(".file-wrapper");
       let target = [...allList].find((e) => {
-        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+        return (
+          e.getAttribute(elementAttributeName.attributeFileName) === fileName
+        );
       });
-      if (!target) {        
+      if (!target) {
         return;
       }
       let allMarkItem = target.getElementsByClassName("mark-item");
       let index = [...allMarkItem].findIndex((e) => {
-        return e.getAttribute(elementAttributeName.decorationTypeKey) === attributeDecorationTypeKey;
+        return (
+          e.getAttribute(elementAttributeName.decorationTypeKey) ===
+          attributeDecorationTypeKey
+        );
       });
       if (index > -1) {
         allMarkItem[index].parentNode.removeChild(allMarkItem[index]);
@@ -244,10 +257,15 @@
       let { fileName, viewColumn } = data;
       let allList = document.querySelectorAll(".file-wrapper");
       let target = [...allList].find((e) => {
-        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+        return (
+          e.getAttribute(elementAttributeName.attributeFileName) === fileName
+        );
       });
       if (target) {
-        target.setAttribute(elementAttributeName.attributeViewColumn, viewColumn);
+        target.setAttribute(
+          elementAttributeName.attributeViewColumn,
+          viewColumn
+        );
       }
     },
     /**
@@ -262,23 +280,25 @@
       let { fileName, line, difference } = data;
       let allList = document.querySelectorAll(".file-wrapper");
       let target = [...allList].find((e) => {
-        return e.getAttribute(elementAttributeName.attributeFileName) === fileName;
+        return (
+          e.getAttribute(elementAttributeName.attributeFileName) === fileName
+        );
       });
       if (target) {
-        let markItemList = target.getElementsByClassName('mark-item');
-        [...markItemList].forEach(e => {
+        let markItemList = target.getElementsByClassName("mark-item");
+        [...markItemList].forEach((e) => {
           let range = e.getAttribute(elementAttributeName.markItemRange);
-          range = range.split(',').map(e=>Number(e));
-          if (range[0]<=line && range[1]>=line) {
+          range = range.split(",").map((e) => Number(e));
+          if (range[0] <= line && range[1] >= line) {
             let newEnd = range[1] + difference;
-            range[1] = newEnd<range[0]?range[0]:newEnd;
-            e.setAttribute(elementAttributeName.markItemRange, range.join(','));
-          }else if (range[0]>line) {
+            range[1] = newEnd < range[0] ? range[0] : newEnd;
+            e.setAttribute(elementAttributeName.markItemRange, range.join(","));
+          } else if (range[0] > line) {
             let newStart = range[0] + difference;
             let newEnd = range[1] + difference;
-            range[0] = newStart<0?0:newStart;
-            range[1] = newEnd<0?0:newEnd;
-            e.setAttribute(elementAttributeName.markItemRange, range.join(','));
+            range[0] = newStart < 0 ? 0 : newStart;
+            range[1] = newEnd < 0 ? 0 : newEnd;
+            e.setAttribute(elementAttributeName.markItemRange, range.join(","));
           }
         });
       }
@@ -300,7 +320,7 @@
         let fileTextDom = target.querySelector(".file-mark-text-pre");
         fileTextDom.innerText = fileText;
       }
-    }
+    },
   };
 
   // 获取扩展的数据
@@ -309,25 +329,52 @@
     messageEventType[data.type](data.data);
   });
 
+  function getMarkItem(e) {
+    if (e.className === "mark-item") {
+      return e;
+    } else {
+      if (
+        e.parentNode &&
+        e.parentNode.className &&
+        e.parentNode.className !== "mark-list"
+      ) {
+        return getMarkItem(e.parentNode);
+      } else {
+        return undefined;
+      }
+    }
+  }
+
   markList.addEventListener("click", (e) => {
-    let target = e.path.find((ele) => ele.className === "mark-item");
+    let target = getMarkItem(e.target);
     if (target) {
       let parentNode = target.parentNode;
-      let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+      let fileName = parentNode.getAttribute(
+        elementAttributeName.attributeFileName
+      );
       if (e.target.className === "delete-button") {
         // 删除
-        let attributeDecorationTypeKey = target.getAttribute(elementAttributeName.decorationTypeKey);
+        let attributeDecorationTypeKey = target.getAttribute(
+          elementAttributeName.decorationTypeKey
+        );
         vscode.postMessage({
           type: "deleteMarkItem",
           fileName,
           decorationTypeKey: attributeDecorationTypeKey,
         });
-        messageEventType["deleteMarkItem"]({ fileName, attributeDecorationTypeKey});
+        messageEventType["deleteMarkItem"]({
+          fileName,
+          attributeDecorationTypeKey,
+        });
       } else {
         let parentNode = target.parentNode;
-        let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+        let fileName = parentNode.getAttribute(
+          elementAttributeName.attributeFileName
+        );
         let range = target.getAttribute(elementAttributeName.markItemRange);
-        let viewColumn = target.parentNode.getAttribute(elementAttributeName.attributeViewColumn);
+        let viewColumn = target.parentNode.getAttribute(
+          elementAttributeName.attributeViewColumn
+        );
         vscode.postMessage({
           type: "rangeJump",
           range: range,
@@ -338,8 +385,12 @@
     } else {
       if (e.target.className === "file-name") {
         let parentNode = e.target.parentNode.parentNode;
-        let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
-        let viewColumn = parentNode.getAttribute(elementAttributeName.attributeViewColumn);
+        let fileName = parentNode.getAttribute(
+          elementAttributeName.attributeFileName
+        );
+        let viewColumn = parentNode.getAttribute(
+          elementAttributeName.attributeViewColumn
+        );
         vscode.postMessage({
           type: "openOrShowFile",
           fileName,
@@ -347,7 +398,9 @@
         });
       } else if (e.target.className === "file-delete") {
         let parentNode = e.target.parentNode.parentNode;
-        let fileName = parentNode.getAttribute(elementAttributeName.attributeFileName);
+        let fileName = parentNode.getAttribute(
+          elementAttributeName.attributeFileName
+        );
         markList.removeChild(parentNode);
         vscode.postMessage({
           type: "deleteFileAllMark",

@@ -2,7 +2,7 @@
  * @Author: depp.chen
  * @Date: 2021-10-21 11:23:55
  * @LastEditors: depp.chen
- * @LastEditTime: 2021-11-05 16:42:48
+ * @LastEditTime: 2024-04-24 17:48:36
  * @Description: 扩展编辑器
  */
 import {
@@ -56,7 +56,7 @@ export class FmWebViewPanel {
       () => {
         this.dispose();
       },
-      null,
+      null
       // this.disposables
     );
   }
@@ -86,10 +86,10 @@ export class FmWebViewPanel {
       { preserveFocus: false, viewColumn: visibleTextEditors.length + 1 }
     );
     FmWebViewPanel.currentPanel = new FmWebViewPanel(webView);
-	// 扩展webview移动位置时
-	webView.onDidChangeViewState(e=>{
-		FmWebViewPanel.currentPanel?.changeListData();
-	});
+    // 扩展webview移动位置时
+    webView.onDidChangeViewState((e) => {
+      FmWebViewPanel.currentPanel?.changeListData();
+    });
     FmWebViewPanel.currentPanel.changeListData();
   }
 
@@ -175,9 +175,9 @@ export class FmWebViewPanel {
         }
       }
     },
-    [plugInOperationEnum.deleteFileAllMark]: (message:any) => {
+    [plugInOperationEnum.deleteFileAllMark]: (message: any) => {
       mutations.deleteFileAllMarkData(message.fileName);
-    }
+    },
   };
 
   /**
@@ -206,7 +206,7 @@ export class FmWebViewPanel {
    * @author: depp.chen
    */
   public changeListData() {
-    let rootPath = '';
+    let rootPath = "";
     if (workspace.workspaceFolders) {
       rootPath = workspace.workspaceFolders[0].uri.fsPath;
     }
@@ -227,12 +227,12 @@ export class FmWebViewPanel {
   public getHtmlForWebview() {
     let webview = this.FMwebView.webview;
 
-    const scriptPathOnDisk = Uri.joinPath(
+    const scriptUri = Uri.joinPath(
       (state.context as ExtensionContext).extensionUri,
       "media",
       "main.js"
     );
-    const scriptUri = scriptPathOnDisk.with({ scheme: "vscode-resource" });
+    // const scriptUri = scriptPathOnDisk.with({ scheme: "vscode-resource" });
 
     const styleMainPath = Uri.joinPath(
       (state.context as ExtensionContext).extensionUri,
@@ -247,6 +247,7 @@ export class FmWebViewPanel {
     );
     const stylesMainUri = webview.asWebviewUri(styleMainPath);
     const deleteImgPathUri = webview.asWebviewUri(deleteImgPath);
+    const scriptMainUri = webview.asWebviewUri(scriptUri);
 
     const nonce = getNonce();
 
@@ -260,7 +261,7 @@ export class FmWebViewPanel {
       </head>
       <body>
         <div class='mark-list'></div>
-        <script nonce="${nonce}" src="${scriptUri}"></script>
+        <script nonce="${nonce}" src="${scriptMainUri}"></script>
         <div class='img-info'>${deleteImgPathUri}</div>
       </body>
     </html>`;

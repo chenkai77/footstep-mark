@@ -1,9 +1,9 @@
 {
   "name": "footstep-mark",
-  "displayName": "",
+  "displayName": "footstep-mark",
   "publisher": "chen-kai",
-  "description": "",
-  "version": "4.0.2",
+  "description": "Mark the text and trace",
+  "version": "4.1.0",
   "engines": {
     "vscode": "^1.61.0"
   },
